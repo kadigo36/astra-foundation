@@ -16,6 +16,7 @@ from app.db.models import (
     GoogleCredential,
     GoogleDetectedEvent,
     GoogleSyncState,
+    GoogleSeenResource,
     User,
 )
 from app.db.session import get_db
@@ -111,11 +112,14 @@ def _sync_provider(db: Session, user: User, provider: str) -> dict:
         external_id, event_type, title, resource_url, payload = _event_data(provider, item)
         if not external_id:
             continue
-        existing = db.query(GoogleDetectedEvent.id).filter_by(
+        existing = db.query(GoogleSeenResource.id).filter_by(
             user_id=user.id, provider=provider, external_id=external_id
         ).first()
         if existing:
             continue
+        db.add(GoogleSeenResource(
+            user_id=user.id, provider=provider, external_id=external_id
+        ))
         if not baseline:
             db.add(GoogleDetectedEvent(
                 user_id=user.id,
