@@ -48,7 +48,7 @@
 - [ ] Teste de integração real com chave Gemini
 - [ ] Rate limiting e limites de tokens/custo
 - [ ] Métricas de latência, tokens e quotas
-- [ ] Catálogo de agentes especializados com instruções próprias
+- [x] Catálogo fixo de seis especialistas com instruções próprias e sem ferramentas
 
 ## v0.5 — Google e automações
 - [ ] OAuth Google com scopes mínimos
