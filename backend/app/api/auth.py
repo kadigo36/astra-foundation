@@ -3,6 +3,7 @@ from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import current_user
+from app.core.config import settings
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.models import AuditEvent, User
 from app.db.session import get_db
@@ -27,6 +28,8 @@ class TokenOutput(BaseModel):
 
 @router.post("/register", response_model=TokenOutput, status_code=201)
 def register(payload: RegisterInput, db: Session = Depends(get_db)):
+    if not settings.allow_public_registration:
+        raise HTTPException(status_code=403, detail="Public registration is disabled")
     email = str(payload.email).lower()
     if db.query(User).filter_by(email=email).first():
         raise HTTPException(status_code=409, detail="Email already registered")
