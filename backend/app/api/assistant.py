@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.agents.gemini import GeminiNotConfigured, GeminiRequestFailed, generate_plan
 from app.api.dependencies import current_user, require_space_member
+from app.core.config import settings
 from app.db.models import AuditEvent, MemoryEntry, User
 from app.db.session import get_db
 
@@ -59,7 +60,11 @@ def create_plan(
     if payload.space_id is not None:
         require_space_member(payload.space_id, user, db)
 
-    memory_context = select_authorized_memory(db, user, payload.message, payload.space_id)
+    memory_context = (
+        select_authorized_memory(db, user, payload.message, payload.space_id)
+        if settings.gemini_share_memory
+        else []
+    )
     try:
         plan = generate_plan(payload.message, memory_context)
     except GeminiNotConfigured:
