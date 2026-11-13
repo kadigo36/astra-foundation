@@ -64,6 +64,7 @@
 - [x] Drive: preview manual dos 50 ficheiros mais recentes, apenas metadados
 - [x] Credenciais Google cifradas no backend e endpoints de estado/desligação local
 - [x] Refresh automático de access tokens expirados/prestes a expirar
+- [x] Testes CI: 39 aprovados (OAuth, PKCE, cifragem, refresh e previews)
 - [ ] Revogação no fornecedor, polling agendado, fila de eventos, idempotência e aprovações
 
 ## v0.7 — Interfaces e cloud
