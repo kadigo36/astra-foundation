@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import json
+from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode
 
 import httpx
@@ -122,5 +123,51 @@ def serialize_token_bundle(token_data: dict, existing_encrypted: str | None = No
     if not scopes:
         scopes = existing_scopes
 
+    expires_in = token_data.get("expires_in")
+    if expires_in:
+        merged["expires_at"] = (
+            datetime.now(timezone.utc) + timedelta(seconds=int(expires_in))
+        ).isoformat()
     merged["scopes"] = scopes
     return encrypt_secret(json.dumps(merged)), scopes
+
+
+
+def refresh_access_token(refresh_token: str) -> dict:
+    require_oauth_configuration()
+    try:
+        response = httpx.post(
+            GOOGLE_TOKEN_URL,
+            data={
+                "client_id": settings.google_client_id,
+                "client_secret": settings.google_client_secret,
+                "refresh_token": refresh_token,
+                "grant_type": "refresh_token",
+            },
+            headers={"Accept": "application/json"},
+            timeout=15.0,
+        )
+        response.raise_for_status()
+        token_data = response.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        raise GoogleOAuthExchangeError("Google token refresh failed") from exc
+    if not isinstance(token_data, dict) or not token_data.get("access_token"):
+        raise GoogleOAuthExchangeError("Google returned an invalid refresh response")
+    return token_data
+
+
+def google_api_get(url: str, access_token: str, params: dict | None = None) -> dict:
+    try:
+        response = httpx.get(
+            url,
+            params=params or {},
+            headers={"Authorization": f"Bearer {access_token}", "Accept": "application/json"},
+            timeout=15.0,
+        )
+        response.raise_for_status()
+        payload = response.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        raise GoogleOAuthExchangeError("Google API request failed") from exc
+    if not isinstance(payload, dict):
+        raise GoogleOAuthExchangeError("Google API returned an invalid response")
+    return payload
