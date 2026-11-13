@@ -11,20 +11,13 @@ ASTRA starts with three independent Google account connections. One is the schoo
 - Gmail (IMPORTANT label and message headers only)
 - Google Drive (file metadata only)
 
-The other two are personal accounts. Their enabled providers are configured per account; the intended default is Gmail and Drive. Account labels are aliases only (for example `school`, `personal-1`, `personal-2`); do not place email addresses in source code, logs or GitHub.
+The other two are personal accounts. Their enabled providers default to Gmail and Drive. Account labels are aliases only (for example `school`, `personal-1`, `personal-2`); do not place email addresses in source code, logs or GitHub.
 
 ## Why there is one Apps Script instance per account
 
 Google Apps Script installable triggers execute as the account that created the trigger. `ScriptApp.getOAuthToken()` represents that executing account; an open browser session for another Google account does not grant this script access to it.
 
-Therefore, the zero-cost MVP uses **one standalone Apps Script project per Google account**, copied and authorized while signed into that account. Each instance:
-- reads only that account's Google services;
-- has its own OAuth consent and Script Properties;
-- writes to a private Google Sheet in that same account;
-- keeps its own seen-ID baseline and deduplication state;
-- identifies events with a non-sensitive account alias and provider.
-
-This deliberately avoids collecting Google passwords, sharing OAuth refresh tokens between accounts, or granting one account broad access to another account's mailbox or Drive.
+Therefore, the zero-cost MVP uses **one standalone Apps Script project per Google account**, copied and authorized while signed into that account. Each instance reads only that account's Google services, has its own OAuth consent and Script Properties, writes to a private Google Sheet in that account, and keeps its own seen-ID baseline. This avoids collecting passwords, sharing OAuth refresh tokens, or granting one account broad access to another account's mailbox or Drive.
 
 ## Current topology
 
@@ -36,11 +29,11 @@ Private GitHub repository (single source of code)
   |     +-- private school-account event sheet
   |
   +-- Apps Script instance: personal account 1
-  |     +-- Gmail + Drive (read-only by default)
+  |     +-- Gmail + Drive (read-only)
   |     +-- private personal-account event sheet
   |
   +-- Apps Script instance: personal account 2
-        +-- Gmail + Drive (read-only by default)
+        +-- Gmail + Drive (read-only)
         +-- private personal-account event sheet
 
 Future central ASTRA layer:
@@ -48,18 +41,18 @@ Future central ASTRA layer:
   Not deployed in v0.9; no cross-account sharing is enabled by default.
 ```
 
-Separate sheets are intentional: they prevent accidental disclosure of school data to a personal account or vice versa. Central aggregation will be designed as a separate, explicit consent step. Sharing a sheet between accounts is not required for the initial monitoring setup.
+Separate sheets are intentional: they prevent accidental disclosure of school data to a personal account or vice versa. Central aggregation will be designed as a separate, explicit consent step. Sharing a sheet between accounts is not required for initial monitoring.
 
 ## Setup for each account
 
 1. Sign into exactly one target Google account in the browser; verify the avatar/email before creating the script.
 2. Open Google Apps Script and create a standalone project named `ASTRA Monitoring — <alias>`.
-3. Copy `google-apps-script/Code.gs` and `google-apps-script/appsscript.json`.
-4. In the `ASTRA` configuration at the top of `Code.gs`, set a non-sensitive `accountId`, `accountType`, and `enabledProviders`.
+3. Copy `google-apps-script/Code.gs`.
+4. In the `ASTRA` configuration at the top of `Code.gs`, set a non-sensitive `accountId`, `accountType`, and `enabledProviders`:
    - School: `accountId: "school"`, `accountType: "school"`, `enabledProviders: ["classroom", "gmail", "drive"]`.
    - Personal account 1: `accountId: "personal-1"`, `accountType: "personal"`, `enabledProviders: ["gmail", "drive"]`.
    - Personal account 2: `accountId: "personal-2"`, `accountType: "personal"`, `enabledProviders: ["gmail", "drive"]`.
-5. In Project Settings, show the `appsscript.json` manifest and replace it with the repository manifest.
+5. In Project Settings, show the `appsscript.json` manifest. Use `appsscript.json` for the school account and `appsscript.personal.json` for each personal account. The personal manifest intentionally omits Classroom scopes.
 6. Enable only the Google APIs required by that instance in its associated Cloud project. This is per project/instance. Do not configure billing or attach a card. If Google Workspace policy blocks an API or external sharing, stop and ask the administrator; do not bypass policy.
 7. Run `setupAstraMonitoring` to create that account's private event sheet. This function does **not** create a recurring trigger.
 8. Run `runMonitoringCycle` manually. The first successful cycle establishes the baseline without historical alerts.
@@ -70,14 +63,19 @@ Repeat independently for each of the three accounts. Do not paste passwords, OAu
 
 ## OAuth scopes
 
-The manifest requests only:
-- Apps Script external HTTP requests and trigger control;
-- spreadsheet creation and updates for the private event log;
-- Classroom read-only course/coursework access;
-- Gmail metadata access;
-- Drive metadata read-only access.
+School manifest:
+- Apps Script external HTTP requests, trigger control and spreadsheet creation/update;
+- Classroom read-only courses/coursework;
+- Gmail metadata;
+- Drive metadata read-only.
 
-Only authorize providers enabled for that account if the Apps Script authorization screen permits it. Gmail/Drive metadata scopes may trigger additional Google verification/policy requirements depending on account type. A school Workspace administrator may restrict Classroom, Gmail, Drive, Apps Script, OAuth scopes or external sharing. Do not try to circumvent those restrictions.
+Personal manifest:
+- Apps Script external HTTP requests, trigger control and spreadsheet creation/update;
+- Gmail metadata;
+- Drive metadata read-only;
+- no Classroom scopes.
+
+Gmail/Drive metadata scopes may trigger additional Google verification/policy requirements depending on account type. A school Workspace administrator may restrict Classroom, Gmail, Drive, Apps Script, OAuth scopes or external sharing. Do not try to circumvent those restrictions.
 
 ## Current limitations
 
