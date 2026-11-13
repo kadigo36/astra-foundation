@@ -58,6 +58,9 @@ docs/          Arquitetura, segurança, memória e roadmap
 - `GET /api/integrations/google/status` — estado da ligação, sem expor tokens.
 - `POST /api/integrations/google/disconnect` — apagar tokens locais; ainda não revoga consentimento no Google.
 - `GET /api/integrations/google/preview/{provider}` — pré-visualizar dados de leitura do Classroom, Gmail (metadados IMPORTANT) ou Drive, sem enviar conteúdo ao Gemini.
+- `POST /api/integrations/google/sync` e `GET /api/integrations/google/events` — sincronização incremental manual e consulta de eventos.
+
+O worker `python -m app.jobs.google_sync` pode correr como Cloud Run Job e ser acionado pelo Cloud Scheduler. A configuração e os limites atuais estão em [Cloud Monitoring](docs/CLOUD_MONITORING.md).
 
 ## Configuração e segurança
 
