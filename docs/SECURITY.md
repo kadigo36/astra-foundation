@@ -31,3 +31,14 @@ Configurar obrigatoriamente:
 | Proibido | contornar controlos, exfiltrar credenciais, ações ilegais | negar |
 
 O modelo de IA nunca concede permissões. O backend valida identidade, espaço, política e aprovação.
+
+
+## Google OAuth v0.6
+
+- Authorization code flow no backend, state aleatório com hash, expiração curta e PKCE S256.
+- State é consumida uma única vez; tokens e verifier são cifrados com Fernet.
+- Scopes são solicitados separadamente: Classroom read-only, Gmail metadata e Drive metadata.
+- Endpoints de status nunca devolvem tokens; auditoria guarda apenas fornecedor e contagens, não credenciais.
+- A chave de cifragem tem de ser persistente e guardada num secret manager. A sua perda impede decifrar tokens.
+- Desligar a integração remove a credencial local, mas ainda não revoga o consentimento/token junto da Google. A API informa explicitamente esta limitação.
+- Gmail metadata e Drive metadata readonly são scopes restritos; verificar requisitos de OAuth verification e security assessment antes de qualquer publicação.
