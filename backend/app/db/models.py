@@ -113,3 +113,49 @@ class GoogleCredential(Base):
     scopes: Mapped[list[str]] = mapped_column(JSON, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class GoogleSyncState(Base):
+    __tablename__ = "google_sync_states"
+    __table_args__ = (Index("uq_google_sync_user_provider", "user_id", "provider", unique=True),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    provider: Mapped[str] = mapped_column(String(30))
+    baseline_completed: Mapped[bool] = mapped_column(default=False)
+    last_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_success_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_error: Mapped[str | None] = mapped_column(String(80), nullable=True)
+
+
+class GoogleDetectedEvent(Base):
+    __tablename__ = "google_detected_events"
+    __table_args__ = (
+        Index("uq_google_event_user_provider_external", "user_id", "provider", "external_id", unique=True),
+        Index("ix_google_event_user_created", "user_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    provider: Mapped[str] = mapped_column(String(30))
+    event_type: Mapped[str] = mapped_column(String(60))
+    external_id: Mapped[str] = mapped_column(String(255))
+    title: Mapped[str] = mapped_column(String(300))
+    summary: Mapped[str] = mapped_column(Text, default="")
+    resource_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    payload: Mapped[dict] = mapped_column(JSON, default=dict)
+    status: Mapped[str] = mapped_column(String(20), default="new")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class GoogleSeenResource(Base):
+    __tablename__ = "google_seen_resources"
+    __table_args__ = (
+        Index("uq_google_seen_user_provider_external", "user_id", "provider", "external_id", unique=True),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    provider: Mapped[str] = mapped_column(String(30))
+    external_id: Mapped[str] = mapped_column(String(255))
+    first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
