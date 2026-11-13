@@ -31,6 +31,11 @@ app.include_router(approvals_router, prefix="/api")
 
 @app.on_event("startup")
 def initialize_development_schema() -> None:
+    if settings.environment != "development":
+        if settings.auth_secret == "INSECURE-DEVELOPMENT-ONLY-CHANGE-ME":
+            raise RuntimeError("ASTRA_AUTH_SECRET must be set outside development.")
+        if settings.allow_public_registration:
+            raise RuntimeError("Public registration must be disabled outside development.")
     # create_all is suitable for this scaffold; production must use versioned migrations.
     Base.metadata.create_all(bind=engine)
 
