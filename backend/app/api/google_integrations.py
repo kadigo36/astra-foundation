@@ -272,7 +272,7 @@ def _gmail_preview(access_token: str) -> list[dict]:
     listing = google_api_get(
         "https://gmail.googleapis.com/gmail/v1/users/me/messages",
         access_token,
-        {"q": "is:important newer_than:7d", "maxResults": 20},
+        {"labelIds": ["IMPORTANT"], "maxResults": 20},
     )
     items: list[dict] = []
     for message in listing.get("messages", [])[:20]:
