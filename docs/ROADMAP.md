@@ -59,11 +59,12 @@
 
 ## v0.6 — Google e automações
 - [x] OAuth Google: authorization code, state de uso único, PKCE S256 e callback
-- [ ] Classroom: leitura de cursos e novas tarefas (OAuth preparado; cliente API pendente)
-- [ ] Gmail: deteção de emails importantes (scope metadata preparado; cliente API pendente)
-- [ ] Drive: novos ficheiros (scope metadata preparado; cliente API pendente)
+- [x] Classroom: leitura manual de cursos e trabalhos publicados do próprio aluno (preview autenticado)
+- [x] Gmail: preview manual de mensagens IMPORTANT usando apenas metadados/cabeçalhos
+- [x] Drive: preview manual dos 50 ficheiros mais recentes, apenas metadados
 - [x] Credenciais Google cifradas no backend e endpoints de estado/desligação local
-- [ ] Revogação no fornecedor, refresh tokens, fila de eventos, idempotência e aprovações
+- [x] Refresh automático de access tokens expirados/prestes a expirar
+- [ ] Revogação no fornecedor, polling agendado, fila de eventos, idempotência e aprovações
 
 ## v0.7 — Interfaces e cloud
 - [ ] Dashboard autenticado
@@ -71,4 +72,4 @@
 - [ ] Avaliação segura do gateway WhatsApp
 - [ ] Deploy cloud, backups e recuperação testada
 
-Esta entrega cobre apenas OAuth e armazenamento cifrado; não declara Classroom, Gmail ou Drive operacionais. As fases só passam a concluídas quando existe implementação e validação observável.
+Esta entrega cobre OAuth, refresh e previews manuais de leitura; ainda não declara monitorização automática Classroom, Gmail ou Drive operacionais. As fases só passam a concluídas quando existe implementação e validação observável.
