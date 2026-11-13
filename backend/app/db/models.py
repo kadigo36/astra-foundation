@@ -146,3 +146,16 @@ class GoogleDetectedEvent(Base):
     payload: Mapped[dict] = mapped_column(JSON, default=dict)
     status: Mapped[str] = mapped_column(String(20), default="new")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class GoogleSeenResource(Base):
+    __tablename__ = "google_seen_resources"
+    __table_args__ = (
+        Index("uq_google_seen_user_provider_external", "user_id", "provider", "external_id", unique=True),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    provider: Mapped[str] = mapped_column(String(30))
+    external_id: Mapped[str] = mapped_column(String(255))
+    first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
