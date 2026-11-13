@@ -42,8 +42,10 @@
 - [x] Resposta estruturada e validação Pydantic
 - [x] Sugestões de especialistas sem execução automática
 - [x] Auditoria de pedidos sem guardar prompts
+- [x] Partilha de memória com Gemini desativada por defeito; ativação explícita por configuração
+- [x] CI: 19 testes aprovados
 - [ ] Configurar chave Gemini no ambiente cloud
-- [ ] Executar CI e validar testes da nova fase
+- [ ] Teste de integração real com chave Gemini
 - [ ] Rate limiting e limites de tokens/custo
 - [ ] Métricas de latência, tokens e quotas
 - [ ] Catálogo de agentes especializados com instruções próprias
