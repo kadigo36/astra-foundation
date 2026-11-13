@@ -57,6 +57,7 @@ docs/          Arquitetura, segurança, memória e roadmap
 - `GET /api/integrations/google/callback` — callback OAuth; state e PKCE validados, tokens cifrados.
 - `GET /api/integrations/google/status` — estado da ligação, sem expor tokens.
 - `POST /api/integrations/google/disconnect` — apagar tokens locais; ainda não revoga consentimento no Google.
+- `GET /api/integrations/google/preview/{provider}` — pré-visualizar dados de leitura do Classroom, Gmail (metadados IMPORTANT) ou Drive, sem enviar conteúdo ao Gemini.
 
 ## Configuração e segurança
 
