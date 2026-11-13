@@ -67,7 +67,18 @@
 - [x] Testes CI: 39 aprovados (OAuth, PKCE, cifragem, refresh e previews)
 - [ ] Revogação no fornecedor, polling agendado, fila de eventos, idempotência e aprovações
 
-## v0.7 — Interfaces e cloud
+## v0.7 — Monitoring Engine (primeira implementação)
+- [x] Estado de sincronização por utilizador e fornecedor Google
+- [x] Primeira sincronização como baseline, sem gerar falsos alertas de itens antigos
+- [x] Deteção incremental de novos itens Classroom, emails IMPORTANT e ficheiros Drive
+- [x] Deduplicação persistente por utilizador/fornecedor/ID externo
+- [x] API autenticada para sincronizar manualmente e consultar eventos
+- [x] Auditoria agregada sem guardar conteúdo de emails ou ficheiros
+- [ ] Paginação completa e cursores nativos dos fornecedores
+- [ ] Agendamento cloud, retries e fila de eventos
+- [ ] Notificações smart e preferências por utilizador
+
+## v0.8 — Interfaces e cloud
 - [ ] Dashboard autenticado
 - [ ] Notificações
 - [ ] Avaliação segura do gateway WhatsApp
