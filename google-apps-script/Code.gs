@@ -1,10 +1,19 @@
 /**
- * ASTRA Zero-Cost Google Monitor
- * Runs under the user's own Google account. No external server or billing account.
- * Stores event metadata in a private Google Sheet in the same account.
+ * ASTRA Zero-Cost Google Monitor — multi-account edition
+ *
+ * Deploy one standalone Apps Script project INSIDE EACH Google account.
+ * Each instance runs as its own account and writes to that account's private
+ * event spreadsheet. No cross-account token sharing or password collection.
+ *
+ * Configure ACCOUNT below separately in each copy before running.
  */
 
 const ASTRA = {
+  // Change these values in each account's copy:
+  accountId: "account-1",
+  accountType: "personal", // "personal" or "school"
+  enabledProviders: ["gmail", "drive"], // school: ["classroom", "gmail", "drive"]
+
   spreadsheetProperty: "ASTRA_EVENTS_SPREADSHEET_ID",
   triggerHandler: "runMonitoringCycle",
   maxCourses: 20,
@@ -15,7 +24,15 @@ const ASTRA = {
 };
 
 function setupAstraMonitoring() {
+  // Safe initialization only: does NOT create a recurring trigger.
   const spreadsheet = getOrCreateEventsSpreadsheet_();
+  Logger.log("ASTRA account initialized: " + ASTRA.accountId + " (" + ASTRA.accountType + ")");
+  Logger.log("Private event sheet: " + spreadsheet.getUrl());
+  Logger.log("Next: run runMonitoringCycle manually to establish this account's baseline.");
+}
+
+function enableAstraSchedule() {
+  // Explicit opt-in after a successful manual test.
   ScriptApp.getProjectTriggers()
     .filter(function (trigger) {
       return trigger.getHandlerFunction() === ASTRA.triggerHandler;
@@ -25,8 +42,7 @@ function setupAstraMonitoring() {
     });
 
   ScriptApp.newTrigger(ASTRA.triggerHandler).timeBased().everyMinutes(15).create();
-  Logger.log("ASTRA monitoring configured. Events sheet: " + spreadsheet.getUrl());
-  Logger.log("Run runMonitoringCycle once manually to establish the initial baseline.");
+  Logger.log("15-minute schedule enabled for account: " + ASTRA.accountId);
 }
 
 function stopAstraMonitoring() {
@@ -37,7 +53,7 @@ function stopAstraMonitoring() {
     .forEach(function (trigger) {
       ScriptApp.deleteTrigger(trigger);
     });
-  Logger.log("ASTRA monitoring trigger removed. Existing events and spreadsheet were kept.");
+  Logger.log("ASTRA schedule removed for account: " + ASTRA.accountId + ". Existing events were kept.");
 }
 
 function runMonitoringCycle() {
@@ -49,12 +65,23 @@ function runMonitoringCycle() {
 
   try {
     getOrCreateEventsSpreadsheet_();
-    const results = [
-      runProviderSafely_("classroom", syncClassroom_),
-      runProviderSafely_("gmail", syncGmail_),
-      runProviderSafely_("drive", syncDrive_)
-    ];
-    Logger.log(JSON.stringify({ event: "astra_monitoring_cycle", results: results }));
+    const runners = {
+      classroom: syncClassroom_,
+      gmail: syncGmail_,
+      drive: syncDrive_
+    };
+    const results = ASTRA.enabledProviders.map(function (provider) {
+      if (!runners[provider]) {
+        return { provider: provider, error: "Unknown provider in ASTRA.enabledProviders" };
+      }
+      return runProviderSafely_(provider, runners[provider]);
+    });
+    Logger.log(JSON.stringify({
+      event: "astra_monitoring_cycle",
+      accountId: ASTRA.accountId,
+      accountType: ASTRA.accountType,
+      results: results
+    }));
   } finally {
     lock.releaseLock();
   }
@@ -64,7 +91,7 @@ function runProviderSafely_(provider, syncFunction) {
   try {
     return { provider: provider, result: syncFunction() };
   } catch (error) {
-    console.error("ASTRA provider error (" + provider + "): " + error.message);
+    console.error("ASTRA provider error (" + provider + ", " + ASTRA.accountId + "): " + error.message);
     return { provider: provider, error: String(error.message || error) };
   }
 }
@@ -97,8 +124,6 @@ function syncClassroom_() {
 }
 
 function syncGmail_() {
-  // Gmail metadata scope permits listing by system label and reading message headers,
-  // without downloading message bodies or attachments.
   const list = googleGet_(
     "https://gmail.googleapis.com/gmail/v1/users/me/messages?labelIds=IMPORTANT&maxResults=" +
       ASTRA.maxGmailMessages
@@ -114,12 +139,10 @@ function syncGmail_() {
       "?format=metadata&metadataHeaders=Subject&metadataHeaders=From"
     );
     const headers = (metadata.payload && metadata.payload.headers) || [];
-    const subject = findHeader_(headers, "subject") || "Email importante";
-    const from = findHeader_(headers, "from") || "";
     items.push({
       id: message.id,
-      title: subject,
-      detail: from,
+      title: findHeader_(headers, "subject") || "Email importante",
+      detail: findHeader_(headers, "from") || "",
       createdAt: metadata.internalDate ? new Date(Number(metadata.internalDate)).toISOString() : "",
       url: "https://mail.google.com/mail/u/0/#all/" + message.id
     });
@@ -155,11 +178,12 @@ function recordNewItems_(provider, items) {
   const properties = PropertiesService.getScriptProperties();
   const propertyKey = "ASTRA_SEEN_" + provider.toUpperCase();
   const stored = properties.getProperty(propertyKey);
-
   const currentIds = items.map(function (item) { return item.id; });
+
   if (stored === null) {
     properties.setProperty(propertyKey, JSON.stringify(currentIds.slice(-ASTRA.seenLimit)));
-    Logger.log(provider + ": initial baseline created (" + currentIds.length + " IDs); no historical alerts emitted.");
+    Logger.log(provider + ": baseline created for " + ASTRA.accountId +
+      " (" + currentIds.length + " IDs); no historical alerts emitted.");
     return { baseline: true, scanned: items.length, newEvents: 0 };
   }
 
@@ -178,6 +202,8 @@ function appendEvents_(provider, items) {
   const rows = items.map(function (item) {
     return [
       timestamp,
+      ASTRA.accountId,
+      ASTRA.accountType,
       provider,
       item.title || "",
       item.detail || "",
@@ -200,10 +226,13 @@ function getOrCreateEventsSpreadsheet_() {
     }
   }
 
-  const spreadsheet = SpreadsheetApp.create("ASTRA — Monitoring Events");
+  const spreadsheet = SpreadsheetApp.create("ASTRA — Events — " + ASTRA.accountId);
   const sheet = spreadsheet.getSheets()[0];
   sheet.setName("Events");
-  sheet.appendRow(["Detected at", "Provider", "Title", "Metadata", "External ID", "Source date", "Open"]);
+  sheet.appendRow([
+    "Detected at", "Account ID", "Account type", "Provider",
+    "Title", "Metadata", "External ID", "Source date", "Open"
+  ]);
   sheet.setFrozenRows(1);
   properties.setProperty(ASTRA.spreadsheetProperty, spreadsheet.getId());
   return spreadsheet;
