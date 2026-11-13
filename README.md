@@ -8,7 +8,7 @@ A ASTRA é um assistente pessoal estratégico, proativo e extensível. Este repo
 
 ## Princípios
 
-- Gemini é o coordenador principal previsto; a integração será adicionada atrás de uma interface de modelo.
+- Gemini é o coordenador principal; a integração usa o Google Gen AI SDK atrás de uma camada isolada.
 - O backend é a fronteira de confiança: modelos sugerem; o backend valida permissões e risco.
 - Autonomia limitada: ações de baixo risco podem ser automatizadas; ações sensíveis exigem aprovação explícita.
 - Espaços isolados por contexto, com partilha entre espaços apenas mediante autorização.
@@ -32,7 +32,7 @@ docs/          Arquitetura, segurança, memória e roadmap
 ### Backend
 1. Usa Python 3.11+.
 2. Cria um ambiente virtual e instala: `pip install -r backend/requirements.txt`.
-3. Copia `.env.example` para `backend/.env` e configura um segredo local.
+3. Copia `.env.example` para `.env` na raiz do repositório e configura um segredo local.
 4. Executa: `uvicorn app.main:app --reload --app-dir backend`.
 5. Health check: `GET http://127.0.0.1:8000/health`.
 6. Documentação interativa: `http://127.0.0.1:8000/docs`.
@@ -52,10 +52,12 @@ docs/          Arquitetura, segurança, memória e roadmap
 - `GET/POST /api/approvals` — listar/criar pedidos de aprovação.
 - `POST /api/approvals/{id}/decision?decision=approved|rejected` — decidir; não executa a ação.
 - `GET /api/audit/events` — consultar os próprios eventos de auditoria.
-- `POST /api/assistant/plan` — gerar um plano com Gemini usando apenas memória autorizada; não executa ações.
+- `POST /api/assistant/plan` — gerar um plano com Gemini; memória pessoal não é enviada por defeito e nenhuma ação é executada.
 
 ## Configuração e segurança
 
 As variáveis em `.env.example` são placeholders. Nunca coloques chaves reais no repositório. Fora de development, a API exige segredo JWT próprio e registo público desativado. Esta versão ainda não está pronta para produção: faltam migrações versionadas, rate limiting, recuperação/revogação de sessões e revisão de segurança.
+
+A partilha de memória com Gemini só é ativada explicitamente através de `ASTRA_GEMINI_SHARE_MEMORY=true`. No nível gratuito da API, os conteúdos enviados podem ser usados para melhorar produtos Google.
 
 Consulta [Architecture](docs/ARCHITECTURE.md), [Security](docs/SECURITY.md), [Memory](docs/MEMORY.md), [Intelligence](docs/INTELLIGENCE.md) e [Roadmap](docs/ROADMAP.md).
