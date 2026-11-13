@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import DateTime, ForeignKey, Index, String, Text
+from sqlalchemy import JSON, DateTime, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
@@ -87,3 +87,29 @@ class MemoryRevision(Base):
     snapshot_content: Mapped[str] = mapped_column(Text)
     snapshot_status: Mapped[str] = mapped_column(String(20))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+
+class GoogleOAuthState(Base):
+    __tablename__ = "google_oauth_states"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    state_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    provider: Mapped[str] = mapped_column(String(30))
+    scopes: Mapped[list[str]] = mapped_column(JSON)
+    code_verifier_encrypted: Mapped[str] = mapped_column(Text)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class GoogleCredential(Base):
+    __tablename__ = "google_credentials"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True, index=True)
+    encrypted_tokens: Mapped[str] = mapped_column(Text)
+    scopes: Mapped[list[str]] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
