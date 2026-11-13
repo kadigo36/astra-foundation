@@ -75,7 +75,10 @@
 - [x] API autenticada para sincronizar manualmente e consultar eventos
 - [x] Auditoria agregada sem guardar conteúdo de emails ou ficheiros
 - [ ] Paginação completa e cursores nativos dos fornecedores
-- [ ] Agendamento cloud, retries e fila de eventos
+- [x] Worker de sincronização executável como Cloud Run Job
+- [x] Dockerfile dedicado e instruções Cloud Scheduler (15 minutos)
+- [ ] Criar recursos reais na Google Cloud, configurar secrets e validar execução com conta Google real
+- [ ] Paginação completa, cursores nativos e fila de eventos
 - [ ] Notificações smart e preferências por utilizador
 
 ## v0.8 — Interfaces e cloud
