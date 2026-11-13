@@ -47,6 +47,7 @@ def test_assistant_uses_only_authorized_memory(client, monkeypatch):
         "title": "Segredo", "content": "Nunca deve ser enviado para outro utilizador",
     })
 
+    monkeypatch.setattr("app.api.assistant.settings.gemini_share_memory", True)
     captured = {}
     def fake_generate(message, memories):
         captured["memories"] = memories
@@ -87,6 +88,28 @@ def test_assistant_rejects_access_to_another_users_space(client, monkeypatch):
         json={"message": "Mostra-me a memória", "space_id": space["id"]},
     )
     assert response.status_code == 404
+
+
+def test_memory_context_is_not_shared_by_default(client, monkeypatch):
+    headers = register(client, "assistant-private@example.com")
+    client.post("/api/memory", headers=headers, json={
+        "scope": "central", "category": "preference",
+        "title": "Idioma", "content": "Português europeu",
+    })
+    captured = {}
+
+    def fake_generate(message, memories):
+        captured["memories"] = memories
+        return AssistantPlan(answer="Olá!", intent="greeting")
+
+    monkeypatch.setattr("app.api.assistant.generate_plan", fake_generate)
+    response = client.post(
+        "/api/assistant/plan", headers=headers,
+        json={"message": "Olá, responde em português europeu"},
+    )
+    assert response.status_code == 200
+    assert captured["memories"] == []
+    assert response.json()["memory_items_used"] == 0
 
 
 def test_assistant_returns_clear_error_when_gemini_not_configured(client, monkeypatch):
