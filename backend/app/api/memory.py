@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import Response
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import current_user, require_space_member
 from app.db.models import AuditEvent, MemoryEntry, MemoryRevision, User
 from app.db.session import get_db
+from app.memory.markdown import render_memory_markdown
 
 router = APIRouter(prefix="/memory", tags=["memory"])
 ALLOWED_SCOPES = {"central", "space"}
@@ -133,7 +135,8 @@ def update_memory(memory_id: int, payload: MemoryInput, user: User = Depends(cur
 @router.delete("/{memory_id}", status_code=204)
 def delete_memory(memory_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
     entry = visible_entry(db, user, memory_id)
-    snapshot(db, entry, user, "deleted")
+    # Deletion removes the entry and its revision snapshots; the audit event remains.
+    db.query(MemoryRevision).filter_by(memory_id=entry.id, user_id=user.id).delete()
     db.add(AuditEvent(
         actor_user_id=user.id, space_id=entry.space_id,
         event_type="memory.deleted", outcome="success",
@@ -141,6 +144,16 @@ def delete_memory(memory_id: int, user: User = Depends(current_user), db: Sessio
     ))
     db.delete(entry)
     db.commit()
+
+
+@router.get("/{memory_id}/export.md")
+def export_markdown(memory_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    entry = visible_entry(db, user, memory_id)
+    return Response(
+        content=render_memory_markdown(entry),
+        media_type="text/markdown; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="astra-memory-{entry.id}.md"'},
+    )
 
 
 @router.get("/{memory_id}/revisions")
