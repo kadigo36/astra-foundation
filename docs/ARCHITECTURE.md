@@ -33,6 +33,19 @@ O modelo é um componente não confiável para efeitos de autorização. Pode in
 - **Automação:** serviço de tarefas/eventos com execução idempotente.
 - **Cloud:** alojamento cloud-first, mantendo portabilidade.
 
+## Regra operacional de orçamento zero
+
+A arquitetura de produção acima é o destino conceptual, não o ambiente atualmente ativo. A execução inicial tem de respeitar 0 €/mês e não pode depender de faturação Google Cloud.
+
+- O backend FastAPI, autenticação, memória, aprovações e dashboard permanecem no repositório para desenvolvimento e evolução local.
+- A primeira monitorização pessoal usa Google Apps Script, executado na conta Google do utilizador, com registo numa Google Sheet privada.
+- O monitor usa scopes de leitura de metadados e não envia conteúdo de emails/ficheiros ao Gemini.
+- Cloud Run, Cloud SQL, Cloud Scheduler, Artifact Registry e Secret Manager ficam adiados.
+- Cloudflare Pages/Workers/D1 são opções futuras apenas depois de confirmar limites gratuitos, segurança e ausência de cobrança automática.
+- Nenhum serviço é atualizado para um plano pago automaticamente.
+
+Ver [Zero-Cost Architecture](ZERO_COST_ARCHITECTURE.md) para o fluxo operacional, limites e setup.
+
 ## Regras
 
 1. Cada pedido tem utilizador, espaço, origem e identificador de correlação.

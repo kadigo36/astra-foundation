@@ -4,7 +4,17 @@ A ASTRA é um assistente pessoal estratégico, proativo e extensível. Este repo
 
 ## Estado
 
+**v0.8 — Zero-Cost Architecture (em preparação).** Foi acrescentado um monitor pessoal Google Apps Script para Classroom, Gmail IMPORTANT e Drive. Corre na conta Google do utilizador e regista eventos numa folha privada. Ainda precisa de ser copiado, autorizado e validado; não está ativo.
+
+
 **v0.6 — Google OAuth foundation (em desenvolvimento).** Inclui API FastAPI, autenticação por password + JWT, espaços privados, pedidos de aprovação e auditoria básica. A integração Gemini está preparada no backend, mas requer uma chave de API configurada no ambiente. O modelo apenas planeia; não executa ações.
+
+## Regra de orçamento
+
+- Objetivo rígido: 0 €/mês.
+- Não criar faturação Google Cloud, associar cartões ou ativar serviços pagos.
+- Cloud Run, Cloud SQL, Cloud Scheduler, Artifact Registry e Secret Manager ficam adiados.
+- Se um limite gratuito for excedido, a funcionalidade deve parar e reportar, nunca fazer upgrade automático.
 
 ## Princípios
 
@@ -26,6 +36,12 @@ database/      Migrações e políticas de dados
 docs/          Arquitetura, segurança, memória e roadmap
 .github/       Automação de qualidade
 ```
+
+## Monitorização gratuita
+
+Consulta [Zero-Cost Architecture](docs/ZERO_COST_ARCHITECTURE.md) e os ficheiros em `google-apps-script/`. O monitor lê apenas metadados do Classroom, Gmail IMPORTANT e Drive, cria uma baseline sem alertas retroativos e regista novos eventos numa Google Sheet privada. Não envia emails, não edita ficheiros nem submete trabalhos. Para o ativar, o utilizador tem de copiar e autorizar o projeto em [Google Apps Script](https://script.google.com/); GitHub não consegue ativá-lo na conta Google.
+
+O worker Python e o guia [Cloud Monitoring](docs/CLOUD_MONITORING.md) ficam preservados como opção futura, mas não fazem parte do plano de execução gratuito atual.
 
 ## Desenvolvimento local
 

@@ -81,10 +81,30 @@
 - [ ] Paginação completa, cursores nativos e fila de eventos
 - [ ] Notificações smart e preferências por utilizador
 
-## v0.8 — Interfaces e cloud
-- [ ] Dashboard autenticado
-- [ ] Notificações
-- [ ] Avaliação segura do gateway WhatsApp
-- [ ] Deploy cloud, backups e recuperação testada
+## v0.8 — Zero-Cost Architecture
+- [x] Definir regra rígida de 0 €/mês: sem faturação, cartões ou serviços pagos
+- [x] Preservar backend FastAPI, dashboard e worker v0.7 sem os apagar
+- [x] Criar monitor pessoal Google Apps Script para Classroom, Gmail IMPORTANT e Drive
+- [x] Definir scopes read-only e armazenamento numa Google Sheet privada
+- [x] Baseline inicial sem alertas retroativos e deduplicação por IDs
+- [x] Criar trigger de 15 minutos e função para o parar
+- [x] Documentar setup sem faturação e limites gratuitos
+- [ ] Copiar o projeto Apps Script para a conta Google do utilizador e autorizar
+- [ ] Validar com dados reais e inspecionar logs
+- [ ] Implementar paginação e cursores incrementais robustos
+- [ ] Notificações smart e dashboard
+- [ ] Avaliar canal WhatsApp gratuito, seguro e conforme os termos
 
-Esta entrega cobre OAuth, refresh e previews manuais de leitura; ainda não declara monitorização automática Classroom, Gmail ou Drive operacionais. As fases só passam a concluídas quando existe implementação e validação observável.
+## v0.9 — Memória e experiência pessoal
+- [ ] Fechar migrações, backup/exportação e recuperação
+- [ ] Gestão de memória e histórico de decisões no dashboard
+- [ ] Aprendizagem por correções com propostas de alteração e confirmação
+- [ ] Espaços Escola, Programação, Negócios, Projetos Pessoais e Vida Pessoal
+- [ ] Separação de dados sensíveis e consentimentos
+
+## Regras de entrega
+
+- Uma tarefa só passa a concluída quando existe implementação e validação observável.
+- Código no GitHub não significa que esteja publicado, autorizado ou ativo na conta do utilizador.
+- Nenhum recurso pago é criado sem uma decisão explícita separada.
+- O objetivo de custo permanece 0 €/mês; se um limite gratuito for atingido, a funcionalidade deve parar e reportar, nunca fazer upgrade automático.
