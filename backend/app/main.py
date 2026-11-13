@@ -5,6 +5,7 @@ from app.api.health import router as health_router
 from app.api.auth import router as auth_router
 from app.api.spaces import router as spaces_router
 from app.api.approvals import router as approvals_router
+from app.api.audit import router as audit_router
 from app.core.config import settings
 from app.db.session import Base, engine
 
@@ -27,6 +28,7 @@ app.include_router(health_router)
 app.include_router(auth_router, prefix="/api")
 app.include_router(spaces_router, prefix="/api")
 app.include_router(approvals_router, prefix="/api")
+app.include_router(audit_router, prefix="/api")
 
 
 @app.on_event("startup")
