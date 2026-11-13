@@ -35,11 +35,18 @@
 - [ ] Backups cifrados, retenção e recuperação testada
 - [ ] Interface de gestão de memória no dashboard
 
-## v0.4 — Gemini e agentes
-- [ ] Interface de fornecedor e integração Gemini
-- [ ] Orquestração com limites de custo/tempo
-- [ ] Agentes temporários e catálogo aprovado
-- [ ] Observabilidade e controlo de quotas
+## v0.4 — Gemini Intelligence (primeira implementação)
+- [x] Integração isolada com Google Gen AI SDK
+- [x] Endpoint autenticado para planeamento
+- [x] Seleção de memória central e do espaço autorizado
+- [x] Resposta estruturada e validação Pydantic
+- [x] Sugestões de especialistas sem execução automática
+- [x] Auditoria de pedidos sem guardar prompts
+- [ ] Configurar chave Gemini no ambiente cloud
+- [ ] Executar CI e validar testes da nova fase
+- [ ] Rate limiting e limites de tokens/custo
+- [ ] Métricas de latência, tokens e quotas
+- [ ] Catálogo de agentes especializados com instruções próprias
 
 ## v0.5 — Google e automações
 - [ ] OAuth Google com scopes mínimos
