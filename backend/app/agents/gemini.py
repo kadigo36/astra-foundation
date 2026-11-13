@@ -48,7 +48,7 @@ def generate_plan(message: str, memories: list[dict]) -> AssistantPlan:
 
         client = genai.Client(api_key=settings.gemini_api_key)
         response = client.models.generate_content(
-            model=settings.gemini_model,
+            model=settings.gemini_model or "gemini-3.8-flash",
             contents=json.dumps(
                 {"user_message": message, "authorized_memory": memories},
                 ensure_ascii=False,
