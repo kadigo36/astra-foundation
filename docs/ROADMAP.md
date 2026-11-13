@@ -50,14 +50,21 @@
 - [ ] Métricas de latência, tokens e quotas
 - [x] Catálogo fixo de seis especialistas com instruções próprias e sem ferramentas
 
-## v0.5 — Google e automações
+## v0.5 — Specialist Agents
+- [x] Catálogo fixo de seis especialistas: teacher, developer, researcher, project_manager, analyst e security
+- [x] Instruções próprias para cada especialista injetadas no contexto do Gemini
+- [x] Limite de três especialistas únicos por resposta, validado por Pydantic
+- [x] Nenhum especialista tem ferramentas ou capacidade de execução
+- [x] Testes de catálogo, permissões, unicidade e limites
+
+## v0.6 — Google e automações
 - [ ] OAuth Google com scopes mínimos
 - [ ] Classroom: novas tarefas
 - [ ] Gmail: deteção de emails importantes
 - [ ] Drive: novos ficheiros
 - [ ] Fila de eventos, idempotência e aprovações
 
-## v0.6 — Interfaces e cloud
+## v0.7 — Interfaces e cloud
 - [ ] Dashboard autenticado
 - [ ] Notificações
 - [ ] Avaliação segura do gateway WhatsApp
