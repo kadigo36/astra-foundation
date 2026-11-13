@@ -22,11 +22,18 @@
 - [ ] Rate limiting e recuperação de conta
 - [ ] Migrações Alembic e testes adicionais
 
-## v0.3 — Memória
-- [ ] Esquema PostgreSQL e migrações
-- [ ] Memória estruturada + Markdown
-- [ ] Pesquisa semântica
-- [ ] Exportação, retenção e eliminação
+## v0.3 — Memory Engine (implementação inicial)
+- [x] Memória central e memória por espaço
+- [x] Categorias e estado confirmed/proposed
+- [x] API autenticada de criação, leitura, atualização e eliminação
+- [x] Isolamento por utilizador e membership do espaço
+- [x] Snapshots de versões anteriores
+- [x] Exportação Markdown
+- [x] Auditoria de operações de memória sem guardar o conteúdo
+- [ ] Migrações Alembic
+- [ ] Pesquisa semântica com filtragem de permissões
+- [ ] Backups cifrados, retenção e recuperação testada
+- [ ] Interface de gestão de memória no dashboard
 
 ## v0.4 — Gemini e agentes
 - [ ] Interface de fornecedor e integração Gemini
