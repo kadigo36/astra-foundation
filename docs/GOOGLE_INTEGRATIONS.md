@@ -10,6 +10,7 @@ Esta entrega implementa a fundação OAuth no backend. Ainda não consulta Class
 - `GET /api/integrations/google/callback` — valida state de uso único, troca o código no servidor e guarda os tokens cifrados.
 - `GET /api/integrations/google/status` — devolve apenas estado e scopes; nunca devolve tokens.
 - `POST /api/integrations/google/disconnect` — apaga as credenciais locais. A revogação do consentimento no Google ainda não está implementada; a resposta declara `provider_revocation=not_performed`.
+- `GET /api/integrations/google/preview/{provider}` — leitura manual e limitada de dados, depois de ligação e validação de scopes.
 
 O fluxo usa authorization code, state aleatório com hash na base de dados, expiração de 10 minutos, PKCE S256 e acesso offline. A state é consumida atomicamente para dificultar replay. O utilizador autenticado que iniciou a ligação é o único proprietário da credencial guardada.
 
@@ -44,15 +45,21 @@ python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().d
 
 Nunca substituir a chave de cifragem depois de existirem tokens cifrados, a menos que se faça uma migração de chaves. Perder a chave torna os tokens irrecuperáveis. Em produção, usar um secret manager e backups protegidos.
 
+## Implementado nesta fatia
+
+- Refresh de access tokens usando o refresh token cifrado, quando o token está prestes a expirar.
+- Classroom: pré-visualização de cursos e trabalhos publicados do próprio aluno.
+- Gmail: pré-visualização de mensagens com label `IMPORTANT`, apenas headers/metadata; sem query Gmail e sem corpo/anexos.
+- Drive: pré-visualização dos 50 ficheiros mais recentes por metadados; sem download de conteúdo.
+- Todas as rotas exigem autenticação e scopes previamente concedidos; os resultados não são enviados ao Gemini.
+
 ## Ainda por implementar
 
-1. Refresh seguro de access tokens e tratamento de revogação/expiração.
-2. Revogação do token no Google ao desligar a conta.
-3. Clientes de leitura para Classroom, Gmail e Drive com validação de scopes.
-4. Polling inicial e deteção idempotente de novos eventos.
-5. Gmail: regras de importância sem enviar conteúdo para o Gemini por defeito.
-6. Drive: deteção de novos ficheiros sem descarregar conteúdo.
-7. Fila persistente, retries, rate limits, deduplicação e auditoria.
-8. Testes de integração com projeto Google de teste e revisão das permissões.
+1. Revogação do token no Google ao desligar a conta.
+2. Polling agendado e deteção idempotente de novos eventos.
+3. Gmail: regras de importância personalizadas sem enviar conteúdo para o Gemini por defeito.
+4. Drive: deteção incremental de ficheiros novos, com cursor persistente.
+5. Fila persistente, retries, rate limits, deduplicação e aprovações.
+6. Testes de integração com projeto Google real e revisão das permissões.
 
 Nenhuma chave real, token ou conteúdo de conta deve ser colocado em commits, prompts de diagnóstico ou logs.
