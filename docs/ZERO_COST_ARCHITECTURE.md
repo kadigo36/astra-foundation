@@ -1,106 +1,111 @@
-# ASTRA — Zero-Cost Architecture (v0.8)
+# ASTRA — Zero-Cost Multi-Account Architecture (v0.9)
 
 ## Hard budget rule
 
 The target operating cost is **€0/month**. Do not create a Google Cloud billing account, attach a payment card, enable paid services, or deploy Cloud Run, Cloud SQL, Cloud Scheduler, Artifact Registry, or Secret Manager. Any future paid option requires a separate explicit decision and must never be enabled automatically.
 
-"Free" means staying within published free quotas and using services that do not require a paid subscription. Providers can change quotas or terms; exceeding free quotas may stop functionality. This document does not promise unlimited availability.
+## Multi-account decision
 
-## What stays intact
+ASTRA starts with three independent Google account connections. One is the school account and must monitor:
+- Google Classroom (active courses and coursework)
+- Gmail (IMPORTANT label and message headers only)
+- Google Drive (file metadata only)
 
-The existing FastAPI backend, authentication, approval workflow, audit events, memory engine, Gemini planner, Google OAuth integration, dashboard source, and v0.7 monitoring worker remain in the repository. They are not deleted. The Python backend remains the development/reference implementation for now; it is **not deployed** in this zero-cost setup.
+The other two are personal accounts. Their enabled providers default to Gmail and Drive. Account labels are aliases only (for example `school`, `personal-1`, `personal-2`); do not place email addresses in source code, logs or GitHub.
 
-## Zero-cost MVP topology
+## Why there is one Apps Script instance per account
+
+Google Apps Script installable triggers execute as the account that created the trigger. `ScriptApp.getOAuthToken()` represents that executing account; an open browser session for another Google account does not grant this script access to it.
+
+Therefore, the zero-cost MVP uses **one standalone Apps Script project per Google account**, copied and authorized while signed into that account. Each instance reads only that account's Google services, has its own OAuth consent and Script Properties, writes to a private Google Sheet in that account, and keeps its own seen-ID baseline. This avoids collecting passwords, sharing OAuth refresh tokens, or granting one account broad access to another account's mailbox or Drive.
+
+## Current topology
 
 ```text
-GitHub private repository
-  ├── existing Python/FastAPI backend (local development/reference)
-  ├── React dashboard (not deployed yet)
-  └── google-apps-script/
-        ├── Code.gs
-        └── appsscript.json
-               |
-               | executes as the user's Google account
-               v
-        Google APIs (read-only metadata)
-          ├── Classroom: active courses + coursework
-          ├── Gmail: IMPORTANT label + message headers only
-          └── Drive: file metadata only
-               |
-               v
-        Private Google Sheet in the user's own Drive
-        (monitoring event log; no email bodies or file contents)
+Private GitHub repository (single source of code)
+  |
+  +-- Apps Script instance: school account
+  |     +-- Classroom + Gmail + Drive (read-only)
+  |     +-- private school-account event sheet
+  |
+  +-- Apps Script instance: personal account 1
+  |     +-- Gmail + Drive (read-only)
+  |     +-- private personal-account event sheet
+  |
+  +-- Apps Script instance: personal account 2
+        +-- Gmail + Drive (read-only)
+        +-- private personal-account event sheet
 
-Optional later:
-  React dashboard -> Cloudflare Pages Free
-  Small API/services -> Cloudflare Workers Free + D1 Free
-  Only after checking limits, data residency, security and no-card requirements.
+Future central ASTRA layer:
+  authorized event aggregation, account-aware permissions, dashboard and smart notifications.
+  Not deployed in v0.9; no cross-account sharing is enabled by default.
 ```
 
-The Apps Script path avoids a continuously running server and Google Cloud billing. It runs as the user's own Google account; OAuth authorization is granted by that user. The monitoring event log is a private spreadsheet in that account. It does not send Gmail/Drive/Classroom content to Gemini or to an ASTRA server.
+Separate sheets are intentional: they prevent accidental disclosure of school data to a personal account or vice versa. Central aggregation will be designed as a separate, explicit consent step. Sharing a sheet between accounts is not required for initial monitoring.
 
-## Implemented Apps Script monitor
+## Setup for each account
 
-Source: [google-apps-script/Code.gs](../google-apps-script/Code.gs).
+1. Sign into exactly one target Google account in the browser; verify the avatar/email before creating the script.
+2. Open Google Apps Script and create a standalone project named `ASTRA Monitoring — <alias>`.
+3. Copy `google-apps-script/Code.gs`.
+4. In the `ASTRA` configuration at the top of `Code.gs`, set a non-sensitive `accountId`, `accountType`, and `enabledProviders`:
+   - School: `accountId: "school"`, `accountType: "school"`, `enabledProviders: ["classroom", "gmail", "drive"]`.
+   - Personal account 1: `accountId: "personal-1"`, `accountType: "personal"`, `enabledProviders: ["gmail", "drive"]`.
+   - Personal account 2: `accountId: "personal-2"`, `accountType: "personal"`, `enabledProviders: ["gmail", "drive"]`.
+5. In Project Settings, show the `appsscript.json` manifest. Use `appsscript.json` for the school account and `appsscript.personal.json` for each personal account. The personal manifest intentionally omits Classroom scopes.
+6. Enable only the Google APIs required by that instance in its associated Cloud project. This is per project/instance. Do not configure billing or attach a card. If Google Workspace policy blocks an API or external sharing, stop and ask the administrator; do not bypass policy.
+7. Run `setupAstraMonitoring` to create that account's private event sheet. This function does **not** create a recurring trigger.
+8. Run `runMonitoringCycle` manually. The first successful cycle establishes the baseline without historical alerts.
+9. Inspect execution logs and verify only the enabled providers succeeded.
+10. Only after successful manual validation, explicitly run `enableAstraSchedule` to opt into a 15-minute trigger. Use `stopAstraMonitoring` to remove it.
 
-- Checks Classroom coursework, Gmail messages carrying the IMPORTANT system label, and Drive file metadata.
-- First run establishes a baseline and deliberately emits no historical alerts.
-- Later runs append only newly discovered IDs to a private spreadsheet.
-- Stores a bounded set of seen IDs in Script Properties to avoid duplicates.
-- Uses a script lock to prevent overlapping cycles.
-- Creates a 15-minute time-driven trigger; Google may schedule it with some timing variation.
-- Includes a stop function that removes only the trigger and preserves the event sheet.
-- Reads metadata only: no email bodies, attachments, or Drive file contents.
-- Gmail metadata, Drive metadata and Classroom read-only OAuth scopes are declared in the manifest.
+Repeat independently for each of the three accounts. Do not paste passwords, OAuth tokens, API keys, account email addresses or spreadsheet contents into GitHub/chat.
 
-### Important initial limitations
+## OAuth scopes
 
-This is an initial personal monitor, not yet a complete multi-user replacement for v0.7.
+School manifest:
+- Apps Script external HTTP requests, trigger control and spreadsheet creation/update;
+- Classroom read-only courses/coursework;
+- Gmail metadata;
+- Drive metadata read-only.
 
-- Classroom: up to 20 active courses and 50 coursework items per course per cycle.
-- Gmail: up to 50 IMPORTANT messages per cycle, reading Subject/From headers only.
-- Drive: up to 50 most recently modified non-trashed files per cycle.
-- The current implementation does not yet follow every page token. Very high activity can push an item outside the scan window before it is seen.
+Personal manifest:
+- Apps Script external HTTP requests, trigger control and spreadsheet creation/update;
+- Gmail metadata;
+- Drive metadata read-only;
+- no Classroom scopes.
+
+Gmail/Drive metadata scopes may trigger additional Google verification/policy requirements depending on account type. A school Workspace administrator may restrict Classroom, Gmail, Drive, Apps Script, OAuth scopes or external sharing. Do not try to circumvent those restrictions.
+
+## Current limitations
+
+- This is a personal monitoring prototype, not a central multi-account dashboard.
+- Each account has a separate spreadsheet and baseline. No cross-account data aggregation occurs yet.
+- Scanning is bounded: 20 active courses, 50 coursework items per course, 50 IMPORTANT Gmail messages and 50 recently modified Drive files per cycle.
+- Pagination/cursors are not complete; activity beyond the scan windows can be missed.
 - Seen-ID history is bounded to 2,000 IDs per provider.
-- Trigger executions are subject to Apps Script quotas and may be delayed or fail temporarily.
-- Google API services may need to be enabled in the Apps Script project's associated Google Cloud project. This does not require enabling billing. Do not create a billing account.
-- The script stores event titles and limited metadata in the user's private spreadsheet. Treat that sheet as personal data and do not share it publicly.
-
-## Setup (no billing)
-
-1. Open [Google Apps Script](https://script.google.com/) while signed into the Google account that owns the Classroom, Gmail and Drive data.
-2. Create a standalone project named `ASTRA Monitoring`.
-3. Replace the default code with `google-apps-script/Code.gs`.
-4. In Project Settings, enable **Show "appsscript.json" manifest file** and replace the manifest with `google-apps-script/appsscript.json`.
-5. If Google asks to enable the Classroom, Gmail or Drive API for the script's associated project, enable only those APIs. **Do not configure billing and do not attach a payment method.**
-6. Run `setupAstraMonitoring` once from the editor and review/accept the Google permissions. This creates a private event spreadsheet and a 15-minute trigger.
-7. Run `runMonitoringCycle` manually once. This establishes the initial baseline without alerting on old items.
-8. Open the execution log to find the spreadsheet URL. The spreadsheet is also in the account's Google Drive as **ASTRA — Monitoring Events**.
-9. Use Apps Script → Triggers / Executions to inspect operation. Run `stopAstraMonitoring` to stop scheduled checks.
-
-Do not paste OAuth tokens, passwords, API keys or spreadsheet contents into chat or GitHub.
-
-## Free-tier constraints checked for this design
-
-- Google Apps Script consumer accounts currently have a 6-minute maximum per execution, 90 minutes/day total runtime for time-driven triggers, and a limit of 20 triggers per user per script. Quotas are subject to change: [Google Apps Script quotas](https://developers.google.com/apps-script/guides/services/quotas).
-- Time-driven triggers can run as frequently as every minute, but their actual execution time may be randomized: [Installable triggers](https://developers.google.com/apps-script/guides/triggers/installable).
-- Cloudflare Workers Free currently lists 100,000 requests/day and 10 ms CPU per invocation; this is an optional future host, not part of the initial monitor: [Workers limits](https://developers.cloudflare.com/workers/platform/limits/).
-- Cloudflare D1 has free-plan daily read/write limits; exceeding them blocks queries until reset rather than automatically upgrading: [D1 FAQ](https://developers.cloudflare.com/d1/reference/faq/) and [D1 limit enforcement](https://developers.cloudflare.com/changelog/post/2026-09-01-d1-free-tier-limit-enforcement/).
+- The initial baseline does not create historical alerts.
+- Triggers depend on Apps Script quotas and scheduling behavior. Free quotas and policies can change.
+- Google APIs may need enabling in each script's associated Google Cloud project. Enabling an API is not permission to create billing. Never add billing to solve an activation prompt.
+- GitHub stores source code only. It does not create or authorize scripts in any Google account.
 
 ## Explicitly deferred
 
-- No Google Cloud billing account or paid infrastructure.
-- No Cloud Run, Cloud Scheduler, Cloud SQL, Artifact Registry or Secret Manager.
-- No production deployment of the FastAPI API or React dashboard.
-- No WhatsApp gateway until a genuinely free, secure and terms-compliant option is verified.
-- No automated email sending, file editing, task submission, sharing or deletion.
-- No forwarding of personal Google data to Gemini by default.
-- No claim that the full multi-user ASTRA platform is live.
+- Central event aggregation across accounts.
+- Cross-account spreadsheet sharing or OAuth token exchange.
+- Production dashboard/backend deployment.
+- Google Cloud paid infrastructure.
+- WhatsApp gateway until a genuinely free, secure and terms-compliant option is verified.
+- Sending email, editing/deleting files, submitting school work, sharing data or other write actions.
+- Sending Google content to Gemini by default.
 
-## Next engineering gates
+## Acceptance criteria for v0.9
 
-1. Validate the Apps Script against a test Google account and inspect real execution logs.
-2. Add pagination and robust incremental cursors for all three APIs.
-3. Add event preferences and digest/urgent notification routing without exposing private content.
-4. Decide whether the dashboard should read from the spreadsheet via a controlled Apps Script web app or remain a later Cloudflare-hosted frontend.
-5. Port the minimum required backend functions to a free runtime only after a security and quota review. Do not expose the existing FastAPI backend directly without authentication, migrations, rate limits and security review.
+- Three independent Apps Script instances exist, one per Google account.
+- School instance successfully reads Classroom, Gmail metadata and Drive metadata.
+- Each personal instance successfully reads only its configured providers.
+- Every event row includes account alias, account type and provider.
+- Each account's event spreadsheet remains private to that account.
+- Baselines are created without historical alerts.
+- Recurring triggers remain off until each account passes manual validation.
+- No billing account, card, paid service or cross-account data sharing is introduced.
