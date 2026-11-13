@@ -1,4 +1,4 @@
-# ASTRA — Intelligence Engine v0.4
+# ASTRA — Intelligence Engine v0.4 / Specialist Agents v0.5
 
 ## Objetivo
 
@@ -6,7 +6,8 @@ Introduzir Gemini como coordenador principal da ASTRA, mantendo o backend como �
 
 ## Componentes
 
-- `app/agents/schemas.py`: contrato validado de resposta.
+- `app/agents/schemas.py`: contrato validado de resposta e limite de três especialistas únicos.
+- `app/agents/registry.py`: catálogo fixo de seis especialistas, cada um com finalidade e instruções próprias; todos sem ferramentas permitidas.
 - `app/agents/gemini.py`: integração isolada com o Google Gen AI SDK.
 - `app/api/assistant.py`: endpoint autenticado, seleção de contexto autorizado e auditoria.
 - Modelo predefinido: `gemini-3.8-flash`, configurável por variável de ambiente.
@@ -42,6 +43,19 @@ O endpoint:
 - `proposed_actions`: sugestões, nunca ações executadas.
 - `requires_approval`: indicação do modelo de que uma ação sensível exigiria aprovação.
 
+## Catálogo de especialistas v0.5
+
+O Gemini recebe as descrições e instruções do catálogo para coordenar os papéis adequados ao pedido:
+
+- `teacher`: ensino adaptado e explicações por etapas.
+- `developer`: arquitetura, programação, debugging e qualidade.
+- `researcher`: investigação, evidência e incerteza.
+- `project_manager`: etapas, prioridades, dependências e bloqueios.
+- `analyst`: comparação de opções e trade-offs.
+- `security`: privacidade, permissões e risco operacional.
+
+O modelo pode selecionar no máximo três especialistas. A resposta é validada por Pydantic e seleções duplicadas são rejeitadas. O catálogo não concede ferramentas: todos os especialistas têm `allowed_tools=()`. São perspetivas de raciocínio coordenadas pelo Gemini, não processos autónomos nem agentes com execução independente.
+
 ## Segurança e limites
 
 - A chave Gemini existe apenas no backend (`GEMINI_API_KEY`).
@@ -73,7 +87,7 @@ Sem chave, os testes e o restante backend continuam a funcionar; o endpoint resp
 - Rate limiting e limites de tokens/custo por utilizador.
 - Métricas de latência, tokens e quotas sem registar prompts privados.
 - Recuperação semântica com filtros de autorização aplicados antes da pesquisa.
-- Catálogo de agentes versionado e instruções especializadas.
+- Evoluir os especialistas para módulos separados apenas quando existirem casos de uso e testes que justifiquem essa complexidade.
 - Fluxo de aprovação ligado a ações concretas, com confirmação humana no momento da execução.
 
 Esta versão não executa ações, não acede a Google Workspace e não está pronta para produção.
