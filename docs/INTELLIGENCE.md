@@ -28,7 +28,7 @@ O endpoint:
 1. Exige JWT válido.
 2. Se for indicado um espaço, confirma membership antes de consultar dados ou chamar Gemini.
 3. Recupera apenas memórias confirmadas do utilizador: memória central e, quando autorizado, memória do espaço indicado.
-4. Envia no máximo oito entradas relevantes, truncadas, para reduzir exposição de dados.
+4. Por defeito, não envia memória pessoal para Gemini. Só envia até oito entradas relevantes e truncadas quando `ASTRA_GEMINI_SHARE_MEMORY=true` estiver explicitamente configurado no servidor.
 5. Valida a resposta do modelo através de Pydantic.
 6. Regista metadados de auditoria sem guardar o conteúdo integral do pedido.
 7. Devolve `execution: not_performed`.
@@ -46,6 +46,8 @@ O endpoint:
 
 - A chave Gemini existe apenas no backend (`GEMINI_API_KEY`).
 - O modelo não recebe ferramentas, tokens Google, credenciais nem capacidade de executar código.
+- A partilha de memória com o fornecedor está desativada por defeito (`ASTRA_GEMINI_SHARE_MEMORY=false`).
+- Antes de ativar a partilha, rever os termos e a política de dados do nível de API escolhido. O nível gratuito pode usar conteúdos enviados para melhorar produtos Google; o nível pago indica que esses conteúdos não são usados para esse fim.
 - Memórias são tratadas como dados não confiáveis, não como instruções.
 - Memórias propostas não são enviadas ao modelo.
 - Não é permitido atravessar espaços.
@@ -60,9 +62,10 @@ Adicionar no ambiente do backend, nunca no frontend nem no Git:
 ```env
 GEMINI_API_KEY=...
 GEMINI_MODEL=gemini-3.8-flash
+ASTRA_GEMINI_SHARE_MEMORY=false
 ```
 
-Sem chave, os testes e o restante backend continuam a funcionar; o endpoint responde com 503 até a integração ser configurada.
+Sem chave, os testes e o restante backend continuam a funcionar; o endpoint responde com 503 até a integração ser configurada. Mesmo com chave, a memória pessoal não é partilhada por defeito.
 
 ## Próximas melhorias
 
