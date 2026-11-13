@@ -14,6 +14,9 @@ import json
 def client(monkeypatch):
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+    monkeypatch.setattr(settings, "google_client_id", "test-client-id")
+    monkeypatch.setattr(settings, "google_client_secret", "test-client-secret")
+    monkeypatch.setattr(settings, "google_redirect_uri", "http://localhost:8000/callback")
     monkeypatch.setattr(settings, "google_token_encryption_key", Fernet.generate_key().decode())
     with TestClient(app) as test_client:
         yield test_client
