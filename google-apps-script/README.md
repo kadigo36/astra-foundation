@@ -2,9 +2,7 @@
 
 This folder contains the zero-cost, multi-account monitoring prototype.
 
-## Important
-
-Install **one standalone Apps Script project per Google account**. Apps Script runs as the account that created the trigger; it cannot monitor other browser-signed-in accounts just because they are open in the same browser.
+Install **one standalone Apps Script project per Google account**. Apps Script runs as the account that created the trigger; it cannot monitor other browser-signed-in accounts simply because they are open in the same browser.
 
 Each instance has its own private event spreadsheet, OAuth authorization, seen-ID baseline and provider configuration. No cross-account sharing or central aggregation is enabled yet.
 
@@ -18,11 +16,16 @@ Edit the `ASTRA` object at the top of `Code.gs` before running:
 
 Use aliases only; never hardcode email addresses or credentials.
 
+## Choose the correct manifest
+
+- School account: copy the content of `appsscript.json` (includes Classroom, Gmail and Drive read-only scopes).
+- Personal accounts: copy the content of `appsscript.personal.json` (Gmail and Drive scopes only; no Classroom scope).
+
 ## Safe installation order
 
 1. Sign into the target Google account and verify the account avatar.
 2. Create a standalone Apps Script project for that account.
-3. Copy `Code.gs` and `appsscript.json`.
+3. Copy `Code.gs` and the matching manifest.
 4. Set that instance's account alias/type/providers.
 5. Run `setupAstraMonitoring` (creates a private spreadsheet only; no trigger).
 6. Run `runMonitoringCycle` manually and inspect logs.
