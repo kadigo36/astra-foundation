@@ -11,12 +11,13 @@ class Settings(BaseSettings):
     allow_public_registration: bool = True
 
     gemini_api_key: str | None = None
-    gemini_model: str | None = None
+    gemini_model: str = "gemini-3.8-flash"
 
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
+        env_ignore_empty=True,
     )
 
 
