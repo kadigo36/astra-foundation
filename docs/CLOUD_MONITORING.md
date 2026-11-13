@@ -1,3 +1,5 @@
+> **Estado em v0.8:** este guia descreve a alternativa Cloud Run/Cloud Scheduler da v0.7 e fica preservado apenas para referência futura. **Não executar estes comandos no plano atual de 0 €/mês.** Não criar faturação, cartões, Cloud Run, Cloud Scheduler, Cloud SQL, Artifact Registry ou Secret Manager. A opção atual em desenvolvimento é [Zero-Cost Architecture](ZERO_COST_ARCHITECTURE.md), com Google Apps Script.
+
 # ASTRA — Cloud Monitoring v0.7
 
 ## Arquitetura
