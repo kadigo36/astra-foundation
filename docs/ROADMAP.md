@@ -1,21 +1,26 @@
 # ASTRA — Roadmap
 
-## v0.1 — Foundation (em curso)
+## v0.1 — Foundation
 - [x] Estrutura inicial do repositório
 - [x] API FastAPI e health check
 - [x] Política inicial de risco e aprovação
 - [x] Contrato de proposta de agente
 - [x] Verificação básica de isolamento entre espaços
 - [x] Dashboard inicial responsivo
-- [ ] Executar CI e validar build
+- [x] Workflow CI para testes do backend
 
-## v0.2 — Core seguro
-- [ ] Autenticação e sessões
-- [ ] Modelo de utilizador e espaços
-- [ ] Autorização por recurso e políticas persistidas
-- [ ] Auditoria estruturada
-- [ ] Fluxo de aprovação com expiração e utilização única
-- [ ] Testes de integração
+## v0.2 — Core seguro (implementação inicial)
+- [x] Registo e login com password hashing Argon2
+- [x] JWT com expiração e rotas autenticadas
+- [x] Criação e listagem de espaços privados
+- [x] Verificação de membership por espaço
+- [x] Pedidos de aprovação e decisões explícitas
+- [x] Decisão de aprovação separada da execução
+- [x] Registo e consulta dos próprios eventos de auditoria
+- [x] Proteções de configuração para ambientes não-development
+- [ ] Executar CI e confirmar resultados
+- [ ] Rate limiting e recuperação de conta
+- [ ] Migrações Alembic e testes adicionais
 
 ## v0.3 — Memória
 - [ ] Esquema PostgreSQL e migrações
