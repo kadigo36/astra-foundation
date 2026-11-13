@@ -1,0 +1,17 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap");
+:root{font-family:"DM Sans",sans-serif;color:#f4f2ee;background:#10131c;font-synthesis:none;text-rendering:optimizeLegibility}
+*{box-sizing:border-box}body{margin:0;min-width:320px;min-height:100vh;background:radial-gradient(ellipse at 75% 0%,#24263b 0,#10131c 48%)}
+.shell{width:min(1080px,calc(100% - 48px));margin:0 auto}.topbar{height:82px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ffffff14}
+.brand{display:flex;align-items:center;gap:11px;color:#fff;text-decoration:none;font:800 18px Manrope,sans-serif;letter-spacing:.16em}.brand-mark{display:grid;place-items:center;width:34px;height:34px;border:1px solid #b9a5ff80;border-radius:11px;color:#c7b7ff}
+.status{color:#aaaab9;font-size:12px}.status i{display:inline-block;width:7px;height:7px;margin-right:8px;border-radius:50%;background:#d7ad69}
+.hero{padding:100px 0 88px;max-width:760px}.eyebrow{color:#b9a5ff;font-size:10px;font-weight:700;letter-spacing:.2em}
+h1,h2,h3,p{margin-top:0}h1{margin:20px 0;font:800 clamp(42px,7vw,76px)/1.08 Manrope,sans-serif;letter-spacing:-.055em}h1 span{color:#b9a5ff}
+.intro{max-width:540px;color:#a8a8b8;font-size:16px;line-height:1.8}.section{padding-bottom:70px}
+.section-heading{display:flex;justify-content:space-between;align-items:end;margin-bottom:22px}.section-heading h2{margin:7px 0 0;font:700 24px Manrope,sans-serif}
+.counter{color:#858598;font-size:12px}.space-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.space-card{min-height:190px;padding:22px;border:1px solid #ffffff17;border-radius:15px;background:#ffffff08}.space-number{color:#8e80c2;font-size:11px}
+.space-card h3{margin:27px 0 8px;font:700 17px Manrope,sans-serif}.space-card p{min-height:38px;color:#9c9cad;font-size:12px;line-height:1.6}
+.coming-soon{color:#c9b6ff;font-size:10px}.notice{display:flex;gap:18px;padding:24px;border:1px solid #b9a5ff30;border-radius:15px;background:#b9a5ff0a}
+.notice-icon{color:#c7b7ff;font-size:24px}.notice h2{margin:0 0 8px;font:700 16px Manrope,sans-serif}.notice p{max-width:700px;margin:0;color:#a8a8b8;font-size:13px;line-height:1.7}
+footer{display:flex;justify-content:space-between;padding:45px 0 30px;color:#777789;font-size:9px;letter-spacing:.15em}footer span{letter-spacing:0}
+@media(max-width:760px){.shell{width:min(100% - 32px,560px)}.topbar{height:70px}.status{max-width:150px;text-align:right;line-height:1.5}.hero{padding:76px 0 64px}.space-grid{grid-template-columns:repeat(2,1fr)}.section-heading{align-items:start;flex-direction:column;gap:12px}footer{gap:12px;flex-direction:column}}
