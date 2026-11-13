@@ -57,6 +57,33 @@ Criar no Secret Manager os seguintes segredos, sem colocar os valores no Git ou 
 
 A identidade de execução do Cloud Run Job precisa de `roles/secretmanager.secretAccessor` nos segredos e de permissões de rede/acesso à base de dados. Não criar uma nova chave Fernet se já existirem tokens cifrados.
 
+
+## Identidades e permissões IAM
+
+Criar duas identidades distintas. O worker apenas lê segredos e acede à base de dados; o Scheduler apenas inicia o Cloud Run Job.
+
+```bash
+gcloud iam service-accounts create astra-monitoring-runtime \
+  --display-name="ASTRA monitoring runtime"
+gcloud iam service-accounts create astra-scheduler \
+  --display-name="ASTRA Cloud Scheduler invoker"
+
+export RUNTIME_SA="astra-monitoring-runtime@$PROJECT_ID.iam.gserviceaccount.com"
+export SCHEDULER_SA="astra-scheduler@$PROJECT_ID.iam.gserviceaccount.com"
+
+for SECRET in astra-database-url astra-google-client-id astra-google-client-secret astra-google-token-encryption-key; do
+  gcloud secrets add-iam-policy-binding "$SECRET" \
+    --member="serviceAccount:$RUNTIME_SA" \
+    --role="roles/secretmanager.secretAccessor"
+done
+
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:$SCHEDULER_SA" \
+  --role="roles/run.invoker"
+```
+
+Se uma das service accounts já existir, não repetir a criação. Aplicar permissões ao nível do recurso sempre que possível e confirmar que o Scheduler consegue usar a service account. Não conceder Owner ou Editor a nenhuma destas identidades.
+
 ## Criar o Cloud Run Job
 
 ```bash
