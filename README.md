@@ -4,7 +4,7 @@ A ASTRA é um assistente pessoal estratégico, proativo e extensível. Este repo
 
 ## Estado
 
-**v0.2 — Core seguro (scaffold em desenvolvimento).** Inclui API FastAPI, autenticação por password + JWT, espaços privados, pedidos de aprovação e auditoria básica. Ainda não liga serviços externos nem executa ações reais.
+**v0.4 — Intelligence Engine (em desenvolvimento).** Inclui API FastAPI, autenticação por password + JWT, espaços privados, pedidos de aprovação e auditoria básica. A integração Gemini está preparada no backend, mas requer uma chave de API configurada no ambiente. O modelo apenas planeia; não executa ações.
 
 ## Princípios
 
@@ -52,9 +52,10 @@ docs/          Arquitetura, segurança, memória e roadmap
 - `GET/POST /api/approvals` — listar/criar pedidos de aprovação.
 - `POST /api/approvals/{id}/decision?decision=approved|rejected` — decidir; não executa a ação.
 - `GET /api/audit/events` — consultar os próprios eventos de auditoria.
+- `POST /api/assistant/plan` — gerar um plano com Gemini usando apenas memória autorizada; não executa ações.
 
 ## Configuração e segurança
 
 As variáveis em `.env.example` são placeholders. Nunca coloques chaves reais no repositório. Fora de development, a API exige segredo JWT próprio e registo público desativado. Esta versão ainda não está pronta para produção: faltam migrações versionadas, rate limiting, recuperação/revogação de sessões e revisão de segurança.
 
-Consulta [Architecture](docs/ARCHITECTURE.md), [Security](docs/SECURITY.md), [Memory](docs/MEMORY.md) e [Roadmap](docs/ROADMAP.md).
+Consulta [Architecture](docs/ARCHITECTURE.md), [Security](docs/SECURITY.md), [Memory](docs/MEMORY.md), [Intelligence](docs/INTELLIGENCE.md) e [Roadmap](docs/ROADMAP.md).
