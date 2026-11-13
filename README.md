@@ -4,7 +4,7 @@ A ASTRA é um assistente pessoal estratégico, proativo e extensível. Este repo
 
 ## Estado
 
-**v0.4 — Intelligence Engine (em desenvolvimento).** Inclui API FastAPI, autenticação por password + JWT, espaços privados, pedidos de aprovação e auditoria básica. A integração Gemini está preparada no backend, mas requer uma chave de API configurada no ambiente. O modelo apenas planeia; não executa ações.
+**v0.6 — Google OAuth foundation (em desenvolvimento).** Inclui API FastAPI, autenticação por password + JWT, espaços privados, pedidos de aprovação e auditoria básica. A integração Gemini está preparada no backend, mas requer uma chave de API configurada no ambiente. O modelo apenas planeia; não executa ações.
 
 ## Princípios
 
@@ -53,6 +53,10 @@ docs/          Arquitetura, segurança, memória e roadmap
 - `POST /api/approvals/{id}/decision?decision=approved|rejected` — decidir; não executa a ação.
 - `GET /api/audit/events` — consultar os próprios eventos de auditoria.
 - `POST /api/assistant/plan` — gerar um plano com Gemini; memória pessoal não é enviada por defeito e nenhuma ação é executada.
+- `POST /api/integrations/google/connect/{classroom|gmail|drive}` — iniciar OAuth Google com scopes de leitura separados.
+- `GET /api/integrations/google/callback` — callback OAuth; state e PKCE validados, tokens cifrados.
+- `GET /api/integrations/google/status` — estado da ligação, sem expor tokens.
+- `POST /api/integrations/google/disconnect` — apagar tokens locais; ainda não revoga consentimento no Google.
 
 ## Configuração e segurança
 
@@ -60,4 +64,4 @@ As variáveis em `.env.example` são placeholders. Nunca coloques chaves reais n
 
 A partilha de memória com Gemini só é ativada explicitamente através de `ASTRA_GEMINI_SHARE_MEMORY=true`. No nível gratuito da API, os conteúdos enviados podem ser usados para melhorar produtos Google.
 
-Consulta [Architecture](docs/ARCHITECTURE.md), [Security](docs/SECURITY.md), [Memory](docs/MEMORY.md), [Intelligence](docs/INTELLIGENCE.md) e [Roadmap](docs/ROADMAP.md).
+Consulta [Google Integrations](docs/GOOGLE_INTEGRATIONS.md), [Architecture](docs/ARCHITECTURE.md), [Security](docs/SECURITY.md), [Memory](docs/MEMORY.md), [Intelligence](docs/INTELLIGENCE.md) e [Roadmap](docs/ROADMAP.md).
