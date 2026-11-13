@@ -63,7 +63,7 @@ def test_assistant_uses_only_authorized_memory(client, monkeypatch):
     response = client.post(
         "/api/assistant/plan",
         headers=owner,
-        json={"message": "Ajuda-me com o projeto escolar", "space_id": space_id},
+        json={"message": "Ajuda-me com o projeto escolar e a preferência de idioma português europeu", "space_id": space_id},
     )
     assert response.status_code == 200
     assert response.json()["execution"] == "not_performed"
