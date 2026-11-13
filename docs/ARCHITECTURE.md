@@ -29,7 +29,7 @@ O modelo é um componente não confiável para efeitos de autorização. Pode in
 - **Coordenação:** Gemini através de uma interface isolada de fornecedor.
 - **Dados:** PostgreSQL/Supabase, com migrações versionadas.
 - **Memória:** registos estruturados, Markdown e pesquisa semântica.
-- **Integrações:** Google Classroom, Gmail e Drive, com scopes mínimos.
+- **Integrações:** Google Classroom, Gmail e Drive, com OAuth incremental, scopes mínimos e tokens cifrados no backend; os clientes de leitura e a monitorização ainda estão pendentes.
 - **Automação:** serviço de tarefas/eventos com execução idempotente.
 - **Cloud:** alojamento cloud-first, mantendo portabilidade.
 
