@@ -1,4 +1,5 @@
 import hashlib
+import json
 import secrets
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -18,6 +19,8 @@ from app.integrations.google_oauth import (
     decrypt_secret,
     encrypt_secret,
     exchange_authorization_code,
+    google_api_get,
+    refresh_access_token,
     serialize_token_bundle,
 )
 
@@ -181,3 +184,175 @@ def disconnect_google(
     ))
     db.commit()
     return {"disconnected": True, "provider_revocation": "not_performed"}
+
+
+
+PROVIDER_REQUIRED_SCOPES = {
+    "classroom": set(PROVIDER_SCOPES["classroom"]),
+    "gmail": set(PROVIDER_SCOPES["gmail"]),
+    "drive": set(PROVIDER_SCOPES["drive"]),
+}
+
+
+def _get_valid_access_token(db: Session, credential: GoogleCredential) -> str:
+    try:
+        token_bundle = json.loads(decrypt_secret(credential.encrypted_tokens))
+    except (GoogleOAuthConfigurationError, ValueError, TypeError):
+        raise HTTPException(status_code=503, detail="Stored Google credentials are unavailable")
+
+    access_token = token_bundle.get("access_token")
+    expires_at_value = token_bundle.get("expires_at")
+    expires_at = None
+    if expires_at_value:
+        try:
+            expires_at = datetime.fromisoformat(expires_at_value)
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+        except (TypeError, ValueError):
+            expires_at = None
+
+    if access_token and expires_at and expires_at > datetime.now(timezone.utc) + timedelta(seconds=60):
+        return access_token
+
+    refresh_token = token_bundle.get("refresh_token")
+    if not refresh_token:
+        raise HTTPException(status_code=409, detail="Google authorization expired; reconnect the integration")
+
+    try:
+        refreshed = refresh_access_token(refresh_token)
+        encrypted_tokens, scopes = serialize_token_bundle(refreshed, credential.encrypted_tokens)
+        credential.encrypted_tokens = encrypted_tokens
+        credential.scopes = scopes
+        db.commit()
+        return json.loads(decrypt_secret(encrypted_tokens))["access_token"]
+    except GoogleOAuthConfigurationError:
+        raise HTTPException(status_code=503, detail="Google token encryption is not configured correctly")
+    except GoogleOAuthExchangeError:
+        raise HTTPException(status_code=502, detail="Google authorization expired or could not be refreshed")
+
+
+def _classroom_preview(access_token: str) -> list[dict]:
+    courses_payload = google_api_get(
+        "https://classroom.googleapis.com/v1/courses",
+        access_token,
+        {"courseStates": "ACTIVE", "pageSize": 100, "fields": "courses(id,name,section),nextPageToken"},
+    )
+    items: list[dict] = []
+    for course in courses_payload.get("courses", [])[:30]:
+        course_id = course.get("id")
+        if not course_id:
+            continue
+        coursework_payload = google_api_get(
+            f"https://classroom.googleapis.com/v1/courses/{course_id}/courseWork",
+            access_token,
+            {
+                "courseWorkStates": "PUBLISHED",
+                "pageSize": 100,
+                "orderBy": "updateTime desc",
+                "fields": "courseWork(id,title,dueDate,dueTime,updateTime,creationTime,state,alternateLink),nextPageToken",
+            },
+        )
+        for work in coursework_payload.get("courseWork", []):
+            items.append({
+                "id": work.get("id"),
+                "course_id": course_id,
+                "course_name": course.get("name", ""),
+                "title": work.get("title", "Sem título"),
+                "due_date": work.get("dueDate"),
+                "due_time": work.get("dueTime"),
+                "updated_at": work.get("updateTime"),
+                "created_at": work.get("creationTime"),
+                "state": work.get("state"),
+                "url": work.get("alternateLink"),
+            })
+    return items
+
+
+def _gmail_preview(access_token: str) -> list[dict]:
+    listing = google_api_get(
+        "https://gmail.googleapis.com/gmail/v1/users/me/messages",
+        access_token,
+        {"q": "is:important newer_than:7d", "maxResults": 20},
+    )
+    items: list[dict] = []
+    for message in listing.get("messages", [])[:20]:
+        message_id = message.get("id")
+        if not message_id:
+            continue
+        metadata = google_api_get(
+            f"https://gmail.googleapis.com/gmail/v1/users/me/messages/{message_id}",
+            access_token,
+            {"format": "metadata", "metadataHeaders": ["From", "Subject", "Date"]},
+        )
+        payload = metadata.get("payload", {})
+        headers = {
+            header.get("name", "").lower(): header.get("value", "")
+            for header in payload.get("headers", [])
+        }
+        items.append({
+            "id": message_id,
+            "thread_id": metadata.get("threadId"),
+            "internal_date": metadata.get("internalDate"),
+            "labels": metadata.get("labelIds", []),
+            "from": headers.get("from"),
+            "subject": headers.get("subject"),
+            "date": headers.get("date"),
+        })
+    return items
+
+
+def _drive_preview(access_token: str) -> list[dict]:
+    payload = google_api_get(
+        "https://www.googleapis.com/drive/v3/files",
+        access_token,
+        {
+            "q": "trashed = false",
+            "orderBy": "createdTime desc",
+            "pageSize": 50,
+            "fields": "files(id,name,mimeType,createdTime,modifiedTime,webViewLink),nextPageToken",
+        },
+    )
+    return payload.get("files", [])[:50]
+
+
+@router.get("/preview/{provider}")
+def preview_google_data(
+    provider: str,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    if provider not in PROVIDER_REQUIRED_SCOPES:
+        raise HTTPException(status_code=404, detail="Unknown Google integration")
+    credential = db.query(GoogleCredential).filter_by(user_id=user.id).first()
+    if credential is None:
+        raise HTTPException(status_code=404, detail="Google account is not connected")
+    missing_scopes = PROVIDER_REQUIRED_SCOPES[provider] - set(credential.scopes or [])
+    if missing_scopes:
+        raise HTTPException(status_code=403, detail="Google integration is missing required read-only scopes")
+
+    access_token = _get_valid_access_token(db, credential)
+    try:
+        if provider == "classroom":
+            items = _classroom_preview(access_token)
+        elif provider == "gmail":
+            items = _gmail_preview(access_token)
+        else:
+            items = _drive_preview(access_token)
+    except GoogleOAuthExchangeError:
+        db.add(AuditEvent(
+            actor_user_id=user.id,
+            event_type="google.preview",
+            outcome="provider_error",
+            details=f"provider={provider}",
+        ))
+        db.commit()
+        raise HTTPException(status_code=502, detail="Google data could not be retrieved")
+
+    db.add(AuditEvent(
+        actor_user_id=user.id,
+        event_type="google.preview",
+        outcome="success",
+        details=f"provider={provider}; items={len(items)}",
+    ))
+    db.commit()
+    return {"provider": provider, "items": items, "count": len(items), "execution": "read_only"}
