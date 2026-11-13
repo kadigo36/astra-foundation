@@ -7,13 +7,14 @@ from app.api.spaces import router as spaces_router
 from app.api.approvals import router as approvals_router
 from app.api.audit import router as audit_router
 from app.api.memory import router as memory_router
+from app.api.assistant import router as assistant_router
 from app.core.config import settings
 from app.db.session import Base, engine
 
 app = FastAPI(
     title="ASTRA Foundation API",
     description="Secure core for the ASTRA personal assistant.",
-    version="0.3.0",
+    version="0.4.0",
 )
 
 origins = [origin.strip() for origin in settings.allowed_origins.split(",") if origin.strip()]
@@ -31,6 +32,7 @@ app.include_router(spaces_router, prefix="/api")
 app.include_router(approvals_router, prefix="/api")
 app.include_router(audit_router, prefix="/api")
 app.include_router(memory_router, prefix="/api")
+app.include_router(assistant_router, prefix="/api")
 
 
 @app.on_event("startup")
@@ -48,7 +50,7 @@ def initialize_development_schema() -> None:
 async def root() -> dict[str, str]:
     return {
         "name": "ASTRA Foundation API",
-        "version": "0.2.0",
+        "version": "0.4.0",
         "environment": settings.environment,
         "status": "development-scaffold",
     }
