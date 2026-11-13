@@ -1,10 +1,9 @@
 import hashlib
 import secrets
 from datetime import datetime, timedelta, timezone
-from urllib.parse import urlencode
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import RedirectResponse
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import current_user
@@ -89,7 +88,17 @@ def google_callback(
         db.commit()
         raise HTTPException(status_code=400, detail="Google OAuth state expired")
 
-    oauth_state.consumed_at = now
+    consume_result = db.execute(
+        update(GoogleOAuthState)
+        .where(
+            GoogleOAuthState.id == oauth_state.id,
+            GoogleOAuthState.consumed_at.is_(None),
+        )
+        .values(consumed_at=now)
+    )
+    if consume_result.rowcount != 1:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Invalid or already used Google OAuth state")
     user_id = oauth_state.user_id
     provider = oauth_state.provider
     verifier_encrypted = oauth_state.code_verifier_encrypted
