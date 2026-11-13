@@ -1,5 +1,6 @@
 import json
 
+from app.agents.registry import specialist_catalogue_prompt
 from app.agents.schemas import AssistantPlan
 from app.core.config import settings
 
@@ -54,7 +55,11 @@ def generate_plan(message: str, memories: list[dict]) -> AssistantPlan:
                 ensure_ascii=False,
             ),
             config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_INSTRUCTION,
+                system_instruction=(
+                    SYSTEM_INSTRUCTION
+                    + "\\n\\nSPECIALIST CATALOGUE:\\n"
+                    + specialist_catalogue_prompt()
+                ),
                 response_mime_type="application/json",
             ),
         )
