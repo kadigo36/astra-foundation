@@ -1,10 +1,34 @@
-# ASTRA Apps Script source
+# ASTRA Apps Script source — multi-account
 
-This folder contains the personal, zero-cost monitoring prototype.
+This folder contains the zero-cost, multi-account monitoring prototype.
 
-- `Code.gs`: checks Classroom coursework, Gmail IMPORTANT metadata and Drive file metadata.
-- `appsscript.json`: explicit read-only Google scopes plus Sheets, trigger and URL Fetch permissions.
+## Important
 
-Copy these files into a standalone project at https://script.google.com/. Follow [the zero-cost setup guide](../docs/ZERO_COST_ARCHITECTURE.md).
+Install **one standalone Apps Script project per Google account**. Apps Script runs as the account that created the trigger; it cannot monitor other browser-signed-in accounts just because they are open in the same browser.
 
-The script is not deployed by GitHub. It must be copied and authorized by the account owner.
+Each instance has its own private event spreadsheet, OAuth authorization, seen-ID baseline and provider configuration. No cross-account sharing or central aggregation is enabled yet.
+
+## Per-account configuration
+
+Edit the `ASTRA` object at the top of `Code.gs` before running:
+
+- School: `accountId: "school"`, `accountType: "school"`, `enabledProviders: ["classroom", "gmail", "drive"]`.
+- Personal 1: `accountId: "personal-1"`, `accountType: "personal"`, `enabledProviders: ["gmail", "drive"]`.
+- Personal 2: `accountId: "personal-2"`, `accountType: "personal"`, `enabledProviders: ["gmail", "drive"]`.
+
+Use aliases only; never hardcode email addresses or credentials.
+
+## Safe installation order
+
+1. Sign into the target Google account and verify the account avatar.
+2. Create a standalone Apps Script project for that account.
+3. Copy `Code.gs` and `appsscript.json`.
+4. Set that instance's account alias/type/providers.
+5. Run `setupAstraMonitoring` (creates a private spreadsheet only; no trigger).
+6. Run `runMonitoringCycle` manually and inspect logs.
+7. Only after successful validation, run `enableAstraSchedule` to create the 15-minute trigger.
+8. Repeat in the next Google account.
+
+See [the multi-account zero-cost architecture](../docs/ZERO_COST_ARCHITECTURE.md).
+
+The code is not deployed by GitHub. It must be copied and authorized by the account owner. Do not create a billing account or add a payment card.
