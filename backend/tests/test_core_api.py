@@ -13,9 +13,9 @@ def client():
     Base.metadata.drop_all(bind=engine)
 
 
-def register(client):
+def register(client, email="astra-test@example.com"):
     response = client.post("/api/auth/register", json={
-        "email": "astra-test@example.com",
+        "email": email,
         "password": "correct-horse-battery",
     })
     assert response.status_code == 201
@@ -62,7 +62,7 @@ def test_spaces_are_private_and_approval_is_not_execution(client):
     assert decision.status_code == 200
     assert decision.json()["executed"] is False
 
-    other_headers = register(client)
+    other_headers = register(client, "other-user@example.com")
     assert client.get(f"/api/spaces/{space_id}", headers=other_headers).status_code == 404
 
 
