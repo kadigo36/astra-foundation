@@ -1,10 +1,10 @@
 # ASTRA Foundation
 
-A ASTRA é um assistente pessoal estratégico, proativo e extensível. Esta repository contém a fundação técnica inicial, concebida para uma arquitetura cloud-first e independente de fornecedor.
+A ASTRA é um assistente pessoal estratégico, proativo e extensível. Este repositório contém a fundação técnica inicial, concebida para uma arquitetura cloud-first e independente de fornecedor.
 
 ## Estado
 
-**v0.1 — Foundation scaffold.** Esta versão estabelece a estrutura, os limites de segurança, contratos internos, health check e dashboard inicial. Ainda não liga serviços externos nem executa ações reais.
+**v0.2 — Core seguro (scaffold em desenvolvimento).** Inclui API FastAPI, autenticação por password + JWT, espaços privados, pedidos de aprovação e auditoria básica. Ainda não liga serviços externos nem executa ações reais.
 
 ## Princípios
 
@@ -30,23 +30,31 @@ docs/          Arquitetura, segurança, memória e roadmap
 ## Desenvolvimento local
 
 ### Backend
-1. Cria um ambiente virtual Python 3.11+.
-2. Instala dependências: `pip install -r backend/requirements.txt`.
-3. Copia `.env.example` para `backend/.env` (não comitar esse ficheiro).
+1. Usa Python 3.11+.
+2. Cria um ambiente virtual e instala: `pip install -r backend/requirements.txt`.
+3. Copia `.env.example` para `backend/.env` e configura um segredo local.
 4. Executa: `uvicorn app.main:app --reload --app-dir backend`.
 5. Health check: `GET http://127.0.0.1:8000/health`.
+6. Documentação interativa: `http://127.0.0.1:8000/docs`.
 
 ### Dashboard
 1. Entra em `dashboard/`.
 2. Executa `npm install`.
 3. Executa `npm run dev`.
 
-## Configuração
+## Endpoints iniciais
 
-As variáveis documentadas em `.env.example` são apenas placeholders. Não coloques chaves reais no repositório. A integração Gemini, Supabase, Google e WhatsApp ainda não está ativa nesta versão.
+- `POST /api/auth/register` — registar utilizador (desenvolvimento).
+- `POST /api/auth/login` — iniciar sessão.
+- `GET /api/auth/me` — identidade autenticada.
+- `GET/POST /api/spaces` — listar/criar espaços próprios.
+- `GET /api/spaces/{id}` — consultar espaço se membro.
+- `GET/POST /api/approvals` — listar/criar pedidos de aprovação.
+- `POST /api/approvals/{id}/decision?decision=approved|rejected` — decidir; não executa a ação.
+- `GET /api/audit/events` — consultar os próprios eventos de auditoria.
 
-## Segurança e maturidade
+## Configuração e segurança
 
-Esta é uma base de desenvolvimento, não um serviço pronto para produção. Antes de alojar publicamente: configurar autenticação, gestão de segredos, políticas de rede, limites de utilização, backups, monitorização, testes de segurança e revisão das políticas de dados.
+As variáveis em `.env.example` são placeholders. Nunca coloques chaves reais no repositório. Fora de development, a API exige segredo JWT próprio e registo público desativado. Esta versão ainda não está pronta para produção: faltam migrações versionadas, rate limiting, recuperação/revogação de sessões e revisão de segurança.
 
 Consulta [Architecture](docs/ARCHITECTURE.md), [Security](docs/SECURITY.md), [Memory](docs/MEMORY.md) e [Roadmap](docs/ROADMAP.md).
