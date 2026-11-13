@@ -57,7 +57,7 @@ def generate_plan(message: str, memories: list[dict]) -> AssistantPlan:
             config=types.GenerateContentConfig(
                 system_instruction=(
                     SYSTEM_INSTRUCTION
-                    + "\\n\\nSPECIALIST CATALOGUE:\\n"
+                    + "\n\nSPECIALIST CATALOGUE:\n"
                     + specialist_catalogue_prompt()
                 ),
                 response_mime_type="application/json",
