@@ -1,0 +1,44 @@
+{
+  "project": "ASTRA Monitoring \u2014 School",
+  "scriptId": "18XTTP6tHIr6ciGEsFh6TjHtmEfYdeeUpLHzE_7ScFqvgg0mbv7SP2Q-X",
+  "source": "Editor Apps Script, leitura via UI e clipboard; sem edi\u00e7\u00e3o",
+  "files": {
+    "ClassroomCalendar.gs": {
+      "sha256": "20b5fa225250a6329031d3677f47fae5cdbb2a7256a5a4d07adb6e2f18e39148",
+      "bytes": 6574
+    },
+    "ClassroomNotificationPreview.gs": {
+      "sha256": "e883793dc9cb307a13d11181c4ebd27a56571cff1011b353e847ad4dca508ecb",
+      "bytes": 5482
+    },
+    "Code.gs": {
+      "sha256": "776549cf80fe445dc5316b3fde21efa5c8f27374b814ba54b2dca90b1ceb54aa",
+      "bytes": 16492
+    },
+    "DriveContent.gs": {
+      "sha256": "1f4eed98c1b0bbdac83f7118c04467b5e07e25f31e75fbb138cfef0d7c359aea",
+      "bytes": 6091
+    },
+    "EventProcessor.gs": {
+      "sha256": "dd81daa80d674619f0c6179f35d9b1a2374fbf595507474f3fe1c2cc6d32db03",
+      "bytes": 23628
+    },
+    "GeminiCore.gs": {
+      "sha256": "7ed634919672a10d842137f9b4f4164b7df26e79db5244887fd79f4e7d75e44d",
+      "bytes": 5544
+    },
+    "Telegram.gs": {
+      "sha256": "8ce790a9964d18611ac1bfd9c9d4799020e51a3eb2bb12899abbdd42238aec90",
+      "bytes": 3133
+    },
+    "TelegramNotifications.gs": {
+      "sha256": "1e82cde3270f90423fbe24d1e3d761cc77586b13177903bb91dfd65ff8d37890",
+      "bytes": 8589
+    },
+    "appsscript.json": {
+      "sha256": "0992bd2b38fac8a710e88ecefd837cc806a7f74027cfb2aa528ddf403b34d9ec",
+      "bytes": 613
+    }
+  },
+  "capturedOn": "2026-11-18"
+}
