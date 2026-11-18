@@ -1,3 +1,5 @@
+> Estado atualizado: estes dois candidatos foram instalados após autorização em 18/11/2026. Ver [validação e rollback](../../docs/INSTALLATION_2026-11-18.md). O texto seguinte conserva o plano revisto antes da instalação.
+
 # Propostas para revisão — sem instalação
 
 TelegramNotifications.gs é a cópia ativa com uma única alteração funcional:
