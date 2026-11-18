@@ -8,6 +8,8 @@ on:
   push:
     branches:
       - "feature/zero-cost-architecture-v0-8"
+      - "feature/multi-google-accounts-v0-9"
+      - "fix/apps-script-persistence-audit-2026-11-18"
 
 jobs:
   validate:
@@ -21,3 +23,6 @@ jobs:
         run: node --check --input-type=commonjs < google-apps-script/Code.gs
       - name: Validate Apps Script manifest JSON
         run: python -m json.tool google-apps-script/appsscript.json > /dev/null
+      - name: Test persistence and crash recovery with isolated mocks
+        run: node --test google-apps-script/tests/*.test.cjs
+

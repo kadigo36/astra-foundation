@@ -187,19 +187,51 @@ function recordNewItems_(provider, items) {
     return { baseline: true, scanned: items.length, newEvents: 0 };
   }
 
-  const seen = new Set(JSON.parse(stored));
+  const storedIds = JSON.parse(stored);
+  if (!Array.isArray(storedIds) || storedIds.some(function (id) { return typeof id !== "string"; })) {
+    throw new Error("Invalid seen-ID state for " + provider + "; existing state was preserved.");
+  }
+  const seen = new Set(storedIds);
   const fresh = items.filter(function (item) { return !seen.has(item.id); });
   const updatedIds = Array.from(new Set(Array.from(seen).concat(currentIds))).slice(-ASTRA.seenLimit);
+  // Persist and flush before acknowledging any IDs. A retry after a failed
+  // property write must also be safe: appendEvents_ checks persisted identity.
+  let appended = 0;
+  if (fresh.length) {
+    appended = appendEvents_(provider, fresh);
+    SpreadsheetApp.flush();
+  }
   properties.setProperty(propertyKey, JSON.stringify(updatedIds));
-
-  if (fresh.length) appendEvents_(provider, fresh);
-  return { baseline: false, scanned: items.length, newEvents: fresh.length };
+  return { baseline: false, scanned: items.length, newEvents: appended };
 }
 
 function appendEvents_(provider, items) {
   const sheet = getOrCreateEventsSpreadsheet_().getSheetByName("Events");
+  // This prototype's layout differs from the live school sheet. Fail closed
+  // instead of silently writing into an incompatible schema.
+  const expectedHeaders = [
+    "Detected at", "Account ID", "Account type", "Provider",
+    "Title", "Metadata", "External ID", "Source date", "Open"
+  ];
+  if (!sheet || JSON.stringify(sheet.getRange(1, 1, 1, 9).getValues()[0]) !== JSON.stringify(expectedHeaders)) {
+    throw new Error("Incompatible Events schema; no events or state were changed.");
+  }
+  const lastRow = sheet.getLastRow();
+  const persistedIds = new Set();
+  if (lastRow > 1) {
+    sheet.getRange(2, 2, lastRow - 1, 6).getValues().forEach(function (row) {
+      if (row[0] === ASTRA.accountId && row[2] === provider) persistedIds.add(String(row[5]));
+    });
+  }
+  const pending = items.filter(function (item) {
+    const id = String(item.id);
+    if (persistedIds.has(id)) return false;
+    persistedIds.add(id);
+    return true;
+  });
+  if (!pending.length) return 0;
   const timestamp = new Date();
-  const rows = items.map(function (item) {
+  const rows = pending.map(function (item) {
     return [
       timestamp,
       ASTRA.accountId,
@@ -213,17 +245,16 @@ function appendEvents_(provider, items) {
     ];
   });
   sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows);
+  return rows.length;
 }
 
 function getOrCreateEventsSpreadsheet_() {
   const properties = PropertiesService.getScriptProperties();
   const existingId = properties.getProperty(ASTRA.spreadsheetProperty);
   if (existingId) {
-    try {
-      return SpreadsheetApp.openById(existingId);
-    } catch (error) {
-      console.warn("Stored ASTRA spreadsheet was unavailable; creating a replacement.");
-    }
+    // An access error is not evidence that the original sheet was deleted.
+    // Preserve the configured ID and let the provider retry on a later cycle.
+    return SpreadsheetApp.openById(existingId);
   }
 
   const spreadsheet = SpreadsheetApp.create("ASTRA — Events — " + ASTRA.accountId);
@@ -258,3 +289,4 @@ function googleGet_(url) {
   }
   return body ? JSON.parse(body) : {};
 }
+
