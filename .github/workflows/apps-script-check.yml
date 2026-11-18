@@ -20,7 +20,10 @@ jobs:
         with:
           node-version: "22"
       - name: Check Apps Script JavaScript syntax
-        run: node --check --input-type=commonjs < google-apps-script/Code.gs
+        run: |
+          for script in google-apps-script/*.gs google-apps-script/live-school/*.gs google-apps-script/candidates/*.gs; do
+            node --check --input-type=commonjs < "$script"
+          done
       - name: Validate Apps Script manifest JSON
         run: python -m json.tool google-apps-script/appsscript.json > /dev/null
       - name: Test persistence and crash recovery with isolated mocks
